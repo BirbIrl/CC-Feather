@@ -5,5 +5,9 @@
         "feather/lib/?.lua",
         "cc-annotations/?.lua"
     ],
+    "workspace.ignoreDir": [
+        ".rockspec",
+        "computers/*/.feather"
+    ],
     "runtime.pathStrict": true
 }

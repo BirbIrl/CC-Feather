@@ -17,7 +17,7 @@ local function help()
 	describeArg("startup", "don't run this manually, the startup file calls this on boot and sets up the environment")
 end
 
-feather = {} ---@diagnostic disable-line: lowercase-global
+local feather = {}
 
 function feather.getVersion()
 	return "FeatherOS " .. version

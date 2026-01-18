@@ -1,4 +1,6 @@
-local repo_url = 'github.com/birbirl/CC-Feather'
+local url = 'github.com/birbirl/CC-Feather'
+local git_url = "git://" .. url .. '.git'
+local repo_url = 'https://' .. url
 local pkgname = "hello"
 
 rockspec_format = "3.0"
@@ -15,7 +17,7 @@ description = {
 }
 
 source = {
-	url = "git://" .. repo_url .. '.git', -- sorry, not compatible with luarocks
+	url = git_url, -- sorry, not compatible with luarocks
 	dir = '.feather/lib/' .. pkgname,
 }
 
