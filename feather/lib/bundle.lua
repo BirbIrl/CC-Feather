@@ -16,9 +16,9 @@ local paths = { "/?.lua" } -- todo: support custom paths
 
 local function findProgram(modulePath)
 	for _, path in pairs(paths) do
-		local keyPos = path:find("?") -- support /?
+		local keyPos = path:find("?")                -- support \?
 		local filled = path:sub(1, keyPos - 1) .. modulePath .. path:sub(keyPos + 1)
-		if fs.exists(filled) and not fs.isDir(filled) then
+		if fs.exists(filled) and not fs.isDir(filled) then --TODO: fs is cc only
 			return filled
 		end
 	end
@@ -32,18 +32,20 @@ local function getPath(branch)
 		path = path_separator .. branch._key .. path
 		branch = branch._up --[[@as feather.lib.bundle.branch]]
 	end
-	return path:sub(2, -1)
+	return path:sub(2)
 end
 
 local meta = {}
 
 function meta:__index(moduleName)
 	---@class feather.lib.bundle.branch: feather.lib.bundle
-	---@field package _key string
-	---@field package _up feather.lib.bundle.branch|feather.lib.bundle
+	---@field _key string
+	---@field _up feather.lib.bundle.branch|feather.lib.bundle
+	---@field _paths table<string, string>
 	local branch = {
 		_up = self,
-		_key = moduleName
+		_key = moduleName,
+		_paths = {},
 	}
 	if moduleName:find(path_separator) then
 		error("don't use \"" .. path_separator .. "\" in paths, use . instead like so: Bundle.path.to.file")
@@ -52,6 +54,7 @@ function meta:__index(moduleName)
 	local path = findProgram(getPath(branch))
 	if path then
 		self[moduleName] = dofile(path)
+		self._paths[moduleName] = path --TODO: this breaks with relative paths
 	end
 	return self[moduleName]
 end
