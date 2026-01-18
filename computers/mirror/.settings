@@ -1,3 +1,4 @@
 {
   [ "list.show_hidden" ] = true,
+  [ "motd.enable" ] = false,
 }

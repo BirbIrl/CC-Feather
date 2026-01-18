@@ -1,20 +1,59 @@
-cc = require("cc.pretty").pretty_print
-local arg = ...
-if arg ~= "noInstall" then
-	local snippet = 'shell.run(".feather/bin/featherOS", "noInstall") --don\'t move'
-	local startup = fs.open("startup.lua", "r+")
-	if not startup then
-		error("Couldn't open the startup.lua file")
+local version = "0.1"
+
+local function describeArg(argument, desc)
+	term.setTextColor(colors.gray)
+	write("\n" .. arg[0] .. " ")
+	term.setTextColor(colors.yellow)
+	write(argument)
+	term.setTextColor(colors.white)
+	print(" - " .. desc)
+end
+local function help()
+	term.setTextColor(colors.yellow)
+	write("FeatherOS")
+	term.setTextColor(colors.white)
+	print(", a CraftOS distro.")
+	describeArg("install", "adds FeatherOS to the top of the startup.lua file")
+	describeArg("startup", "don't run this manually, the startup file calls this on boot and sets up the environment")
+end
+
+local function getVersion()
+	return "FeatherOS " .. version
+end
+
+local argument = ...
+if argument == "install" then
+	local startupPath = "startup.lua"
+	local startup
+	if not fs.exists(startupPath) or fs.isDir(startupPath) then
+		startup = assert(fs.open(startupPath, "w+"))
+	else
+		startup = assert(fs.open(startupPath, "r+"))
 	end
+	local snippet = 'shell.run(".feather/bin/featherOS", "startup") --don\'t touch'
 	local line = startup.readLine()
 	if line ~= snippet then
 		startup.seek("set")
 		local all = startup.readAll()
 		startup.seek("set")
-		startup.writeLine(snippet)
-		startup.write(all)
+		startup.write(snippet .. "\n" .. all)
 		startup.close()
+		settings.set("motd.enable", false)
+		settings.set("list.show_hidden", true)
+		settings.save()
 		os.reboot()
 	end
 	startup.close()
+	term.setTextColor(colors.red)
+	print("featherOS already installed.")
+elseif argument == "startup" then
+	_G.os.version = getVersion
+	package.path = package.path .. ";/.feather/lib/?/init.lua;/.feather/lib/?"
+	shell.setPath(shell.path() .. ":.feather/bin")
+	term.setCursorPos(1, 1)
+	term.clear()
+	term.setTextColor(colors.yellow)
+	print(getVersion())
+elseif argument == nil then
+	help()
 end
