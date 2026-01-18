@@ -9,6 +9,8 @@
 ---| '"rb"' # binary read mode
 ---| '"wb"' # binary write mode
 ---| '"ab"' # binary append mode
+---| '"r+"' # read+write update mode
+---| '"w+"' # update mode, all data erased
 
 ---@alias ccTweaked.fs.seekWhence
 ---| '"set"' # relative to the start of the file

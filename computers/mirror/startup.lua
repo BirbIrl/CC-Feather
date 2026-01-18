@@ -1,3 +1,5 @@
-shell.execute("/feather/bin/bundle", "init")
+shell.run(".feather/bin/featherOS", "noInstall") --don't move
+-- shell.run(".feather/bin/featherOS", "noInstall") --don't move
+-- shell.run(".feather/bin/featherOS", "noInstall") --don't move
+ -- shell.run(".feather/bin/featherOS", "noInstall") --don't move
 
-_G.dbg = require("cc.pretty").pretty_print
