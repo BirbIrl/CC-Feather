@@ -17,8 +17,14 @@ local function help()
 	describeArg("startup", "don't run this manually, the startup file calls this on boot and sets up the environment")
 end
 
-local function getVersion()
+feather = {} ---@diagnostic disable-line: lowercase-global
+
+function feather.getVersion()
 	return "FeatherOS " .. version
+end
+
+function feather.path()
+	return fs.getDir(fs.getDir(debug.getinfo(1).source:sub(2, -1))) -- yep.
 end
 
 local argument = ...
@@ -47,13 +53,14 @@ if argument == "install" then
 	term.setTextColor(colors.red)
 	print("featherOS already installed.")
 elseif argument == "startup" then
-	_G.os.version = getVersion
+	_G.os.version = feather.getVersion
+	_G.feather = feather
 	package.path = package.path .. ";/.feather/lib/?/init.lua;/.feather/lib/?"
 	shell.setPath(shell.path() .. ":.feather/bin")
 	term.setCursorPos(1, 1)
 	term.clear()
 	term.setTextColor(colors.yellow)
-	print(getVersion())
+	print(feather.getVersion())
 elseif argument == nil then
 	help()
 end

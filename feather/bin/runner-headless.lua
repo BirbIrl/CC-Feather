@@ -1,16 +1,5 @@
 --runs program and allows stopping it with an event
 
---CC-Feather module info, only runs on require()
-do
-	local args = table.pack(...)
-	if #args == 2 and type(package.loaded[args[1]]) == "table" and next(package.loaded[args[1]]) == nil then
-		return {
-			_bundle = {
-			}
-		}
-	end
-end
-
 ---@type string
 local programName = ...
 local args = table.pack(select(2, ...))
