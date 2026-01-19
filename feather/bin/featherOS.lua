@@ -1,5 +1,3 @@
-local version = "0.1"
-
 local function describeArg(argument, desc)
 	term.setTextColor(colors.gray)
 	write("\n" .. arg[0] .. " ")
