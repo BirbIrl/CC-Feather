@@ -1,0 +1,2 @@
+---@meta
+bundle = require

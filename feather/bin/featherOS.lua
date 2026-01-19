@@ -17,6 +17,14 @@ local function help()
 	describeArg("startup", "don't run this manually, the startup file calls this on boot and sets up the environment")
 end
 
+local function bundle(path)
+	local oldPath = package.path
+	package.path = package.path .. ";/.feather/lib/?/init.lua"
+	local module = require(path)
+	package.path = oldPath
+	return module
+end
+
 local feather = {}
 
 function feather.getVersion()
@@ -55,12 +63,28 @@ if argument == "install" then
 elseif argument == "startup" then
 	_G.os.version = feather.getVersion
 	_G.feather = feather
-	package.path = package.path .. ";/.feather/lib/?/init.lua;/.feather/lib/?"
+	_G.bundle = bundle
 	shell.setPath(shell.path() .. ":.feather/bin")
 	term.setCursorPos(1, 1)
 	term.clear()
 	term.setTextColor(colors.yellow)
 	print(feather.getVersion())
+	term.setTextColor(colors.white)
+	write("Computer ID: ")
+	term.setTextColor(colors.yellow)
+	write(tostring(os.getComputerID()))
+
+	local label = os.getComputerLabel()
+	if label then
+		term.setTextColor(colors.white)
+		write(' - "')
+		term.setTextColor(colors.yellow)
+		write(label)
+		term.setTextColor(colors.white)
+		write('"')
+	end
+
+	print()
 elseif argument == nil then
 	help()
 end
