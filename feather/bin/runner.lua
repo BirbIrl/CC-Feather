@@ -1,4 +1,6 @@
 --opens program in multishell and allows stopping it with an event
+--
+--should refactor this into just runner, but have a --headless arg
 
 local programName = ...
 local args = table.pack(select(2, ...))

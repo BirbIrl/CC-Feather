@@ -1,4 +1,5 @@
 {
   [ "list.show_hidden" ] = true,
   [ "motd.enable" ] = false,
+  [ "feather.bundle.mirrorID" ] = 2,
 }

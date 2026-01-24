@@ -58,7 +58,7 @@ function rednet.open(modem) end
 function rednet.close(modem) end
 
 ---Get whether a modem is currently open on rednet
----@param modem string|ccTweaked.peripheral.computerSide The name/side of the modem to check. If omitted, all modems will be checked
+---@param modem? string|ccTweaked.peripheral.computerSide The name/side of the modem to check. If omitted, all modems will be checked
 ---@return boolean isOpen If the modem is open
 ------
 ---[Official Documentation](https://tweaked.cc/module/rednet.html#v:isOpen)
