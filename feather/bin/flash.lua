@@ -15,9 +15,20 @@ local function help()
 	describeArg("force?", "doesn't prompt to confirm")
 end
 
+local function deserialiseFile(path)
+	local file = fs.open(path, "r")
+	if not file then
+		return {}
+	end
+	local result = textutils.unserialise(file.readAll() or "{}")
+	assert(type(result) == "table", "Couldn't parse existing .settings file!")
+	return result
+end
+
 ---@param drive ccTweaked.peripheral.Drive
 function install(drive)
 	local mountPath = assert(drive.getMountPath())
+	local mirrorID = settings.get("feather.bundle.mirrorID", os.getComputerID())
 	local paths = {
 		".feather/bin/featherOS.lua",
 		".feather/bin/bundle.lua",
@@ -32,6 +43,12 @@ function install(drive)
 		fs.copy(path, combined)
 	end
 	shell.execute("featherOS", "install", fs.combine(mountPath, "startup.lua"))
+	local settingsFilePath = fs.combine(mountPath, ".settings")
+	local settings = deserialiseFile(settingsFilePath)
+	settings["feather.bundle.mirrorID"] = mirrorID
+	local settingsFile = assert(fs.open(settingsFilePath, "w"), "couldn't open file")
+	settingsFile.write(textutils.serialise(settings))
+	settingsFile.close()
 end
 
 local force = ... == "force"
