@@ -13,7 +13,8 @@ local function help()
 	write("FeatherOS")
 	term.setTextColor(colors.white)
 	print(", a CraftOS distro.")
-	describeArg("install", "adds FeatherOS to the top of the startup.lua file")
+	describeArg("install [customInstallPath?]",
+		"adds FeatherOS to the top of the startup.lua file, path can be overriden with customPath, which will also prevent the auto-restart.")
 	describeArg("startup", "don't run this manually, the startup file calls this on boot and sets up the environment")
 end
 
@@ -35,9 +36,9 @@ function feather.path()
 	return fs.getDir(fs.getDir(debug.getinfo(1).source:sub(2, -1))) -- yep.
 end
 
-local argument = ...
+local argument, customPath = ...
 if argument == "install" then
-	local startupPath = "startup.lua"
+	local startupPath = customPath or "startup.lua"
 	local startup
 	if not fs.exists(startupPath) or fs.isDir(startupPath) then
 		startup = assert(fs.open(startupPath, "w+"))
@@ -55,11 +56,14 @@ if argument == "install" then
 		settings.set("motd.enable", false)
 		settings.set("list.show_hidden", true)
 		settings.save()
-		os.reboot()
+		if not customPath then
+			os.reboot()
+		end
+	else
+		startup.close()
+		term.setTextColor(colors.red)
+		print("featherOS already installed.")
 	end
-	startup.close()
-	term.setTextColor(colors.red)
-	print("featherOS already installed.")
 elseif argument == "startup" then
 	_G.os.version = feather.getVersion
 	_G.feather = feather

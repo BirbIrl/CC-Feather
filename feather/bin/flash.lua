@@ -1,0 +1,57 @@
+local pp = require("cc.pretty").pretty_print
+local function describeArg(argument, desc)
+	term.setTextColor(colors.gray)
+	write("\n" .. arg[0] .. " ")
+	term.setTextColor(colors.yellow)
+	write(argument)
+	term.setTextColor(colors.white)
+	print(" - " .. desc)
+end
+local function help()
+	term.setTextColor(colors.yellow)
+	write("Flash")
+	term.setTextColor(colors.white)
+	print(", installs FeatherOS onto another machine.")
+	describeArg("force?", "doesn't prompt to confirm")
+end
+
+---@param drive ccTweaked.peripheral.Drive
+function install(drive)
+	local mountPath = assert(drive.getMountPath())
+	local paths = {
+		".feather/bin/featherOS.lua",
+		".feather/bin/bundle.lua",
+		".feather/bin/runner.lua",
+		".feather/lib/feather/storage"
+	}
+	for _, path in ipairs(paths) do
+		local combined = fs.combine(mountPath, path)
+		if fs.exists(combined) then
+			fs.delete(combined)
+		end
+		fs.copy(path, combined)
+	end
+	shell.execute("featherOS", "install", fs.combine(mountPath, "startup.lua"))
+end
+
+local force = ... == "force"
+
+
+---@type ccTweaked.peripheral.Drive[]
+local drives = table.pack(peripheral.find("drive"))
+assert(#drives == 1, "There must be exactly one disk drive connected. Found " .. #drives)
+
+if force then
+	install(drives[1])
+	return
+end
+
+print("Do you wish to install FeatherOS to the attached computer? Y/n")
+repeat
+	local _, result = os.pullEvent("key")
+	sleep(0.05)
+	if result == keys.n then
+		return
+	end
+until result == keys.y or result == keys.enter
+install(drives[1])
