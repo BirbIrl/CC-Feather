@@ -56,7 +56,7 @@ function feather.updatePath()
 		for _, entry in ipairs(fs.list(manifestPath)) do
 			local programPath = fs.combine(manifestPath, entry)
 			if fs.isDir(programPath) then
-				shell.setPath(shell.path() .. ":" .. programPath)
+				shell.setPath(shell.path() .. ":/" .. programPath)
 			end
 		end
 	end

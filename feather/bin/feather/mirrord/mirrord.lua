@@ -38,7 +38,7 @@ local function handleRequest(sender, message)
 			packageName = contents.packageName,
 		}
 	}
-	local path = contents.packageName:gsub(".", "/")
+	local path = contents.packageName:gsub('%.', "/")
 	local struct = storage.encode(fs.combine(feather.installPath(), path))
 	answer.contents.entry = struct
 	rednet.send(sender, answer, protocol)

@@ -98,7 +98,7 @@ function module.install(pkgName)
 			return false
 		end
 	until id == getMirrorID() and message and message.respondsTo == request.id
-	storage.decode(message.contents.entry, feather.installPath())
+	storage.decode(message.contents.entry)
 	feather.updatePath()
 	return true
 end
