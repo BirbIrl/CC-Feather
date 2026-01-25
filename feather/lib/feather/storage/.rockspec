@@ -1,24 +1,37 @@
-local url = 'github.com/birbirl/CC-Feather'
-local git_url = "git://" .. url .. '.git'
-local repo_url = 'https://' .. url
 local pkgname = "storage"
+local type = "lib"
+local ver = "unstable"
+local summary = "filesystem lib for computercraft"
+local detailed =
+[[filesystem library for the computercraft mod, part of the cc-feather project]]
+
+local url = "github.com/birbirl/CC-Feather"
+local manifest = "feather"
+
+local dir = type .. "/"
+if type == "lib" then
+	dir = dir .. manifest .. "/"
+end
 
 rockspec_format = "3.0"
-package = "feather." .. pkgname
-version = "unstable"
+package = manifest .. "." .. pkgname
+version = ver
 
 description = {
-	summary = 'filesystem lib for computercraft',
-	detailed =
-	[[filesystem library for the computercraft mod, part of the cc-feather project]],
-	labels = { 'CC-Feather' },
-	homepage = repo_url,
-	license = 'GPL-3.0'
+	summary = summary,
+	detailed = detailed,
+	labels = { "CC-Feather" },
+	homepage = "https://" .. url,
+	license = "GPL-3.0"
+}
+
+build = {
+	type = "lib", -- not compatible with luarocks
 }
 
 source = {
-	url = git_url, -- sorry, not compatible with luarocks
-	dir = '.feather/lib/' .. pkgname,
+	url = "git://" .. url .. ".git", -- not compatible with luarocks
+	dir = dir .. pkgname
 }
 
 dependencies = {}

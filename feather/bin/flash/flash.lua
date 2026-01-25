@@ -11,7 +11,7 @@ local function help()
 	write("Flash")
 	term.setTextColor(colors.white)
 	print(", installs FeatherOS onto another machine.")
-	describeArg("force?", "doesn't prompt to confirm")
+	describeArg("force", "doesn't prompt to confirm")
 end
 
 local function deserialiseFile(path)
