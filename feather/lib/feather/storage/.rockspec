@@ -8,13 +8,10 @@ local detailed =
 local url = "github.com/birbirl/CC-Feather"
 local manifest = "feather"
 
-local dir = type .. "/"
-if type == "lib" then
-	dir = dir .. manifest .. "/"
-end
+local dir = type .. "/" .. manifest .. "/" .. pkgname
 
 rockspec_format = "3.0"
-package = manifest .. "." .. pkgname
+package = dir:gsub("/", ".")
 version = ver
 
 description = {
@@ -31,7 +28,7 @@ build = {
 
 source = {
 	url = "git://" .. url .. ".git", -- not compatible with luarocks
-	dir = dir .. pkgname
+	dir = dir
 }
 
 dependencies = {}

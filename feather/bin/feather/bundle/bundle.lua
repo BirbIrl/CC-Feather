@@ -1,4 +1,4 @@
-local bundleUtil = bundle "feather.bundleUtil" ---@type feather.bundleUtil
+local bundle = bundl "feather.bundle" ---@type feather.bundle
 
 
 
@@ -24,10 +24,10 @@ end
 
 local mode, pkgName = ...
 if mode == "get" then
-	bundleUtil.install(pkgName, "lib")
+	bundle.install("lib.feather." .. pkgName)
 elseif mode == "remove" then
 elseif mode == "install" then
-	bundleUtil.install(pkgName, "bin")
+	bundle.install("bin.feather." .. pkgName)
 elseif mode == "uninstall" then
 else
 	help()

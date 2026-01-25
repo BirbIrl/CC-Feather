@@ -29,8 +29,9 @@ local function install(drive)
 	local mountPath = assert(drive.getMountPath())
 	local mirrorID = settings.get("feather.bundle.mirrorID", os.getComputerID())
 	local paths = {
-		".feather/bin/featherOS",
-		".feather/bin/bundle",
+		".feather/bin/feather/featherOS",
+		".feather/bin/feather/bundle",
+		".feather/lib/feather/bundle",
 		".feather/lib/feather/storage"
 	}
 	for _, path in ipairs(paths) do

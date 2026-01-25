@@ -1,9 +1,9 @@
-local pkgname = "bundleUtil"
-local type = "lib"
+local pkgname = "featherOS"
+local type = "bin"
 local ver = "unstable"
-local summary = "packaging lib for computercraft"
+local summary = "TBA"
 local detailed =
-[[packaging library for the computercraft mod, part of the cc-feather project]]
+[[TBA]]
 
 local url = "github.com/birbirl/CC-Feather"
 local manifest = "feather"

@@ -1,4 +1,4 @@
-local storage = bundle "feather.storage" ---@type feather.storage
+local storage = bundl "feather.storage" ---@type feather.storage
 
 peripheral.find("modem", rednet.open)
 assert(rednet.isOpen(), "Must have connected modem")
@@ -17,11 +17,11 @@ rednet.host(protocol, os.getComputerLabel() or ("Unnamed Computer nr." .. os.get
 
 ---@class feather.mirrord.message.bundle.get: feather.mirrord.message
 ---@field request_type "bundleGet"
----@field contents {packageName: string, packageType: "lib"|"bin"}
+---@field contents {packageName: string}
 
 ---@class feather.mirrord.message.bundle.post: feather.mirrord.message
 ---@field request_type "bundlePost"
----@field contents {packageName: string, packageType: "lib"|"bin", entry: feather.storage.entryStruct}
+---@field contents {packageName: string, entry: feather.storage.entryStruct}
 
 
 ---@param sender number
@@ -38,15 +38,8 @@ local function handleRequest(sender, message)
 			packageName = contents.packageName,
 		}
 	}
-	answer.contents.packageType = contents.packageType;
-	local struct
-	if contents.packageType == "lib" then
-		local pkgPath = contents.packageName:gsub(".", "/")
-		struct = storage.encode(fs.combine(feather.installPath(), "lib", pkgPath))
-	else
-		struct = storage.encode(fs.combine(feather.installPath(), "bin", contents.packageName))
-	end
-
+	local path = contents.packageName:gsub(".", "/")
+	local struct = storage.encode(fs.combine(feather.installPath(), path))
 	answer.contents.entry = struct
 	rednet.send(sender, answer, protocol)
 end

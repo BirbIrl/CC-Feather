@@ -1,20 +1,17 @@
-local pkgname = "featherOS"
-local type = "bin"
+local pkgname = "bundle"
+local type = "lib"
 local ver = "unstable"
-local summary = "filesystem lib for computercraft"
+local summary = "packaging lib for computercraft"
 local detailed =
-[[filesystem library for the computercraft mod, part of the cc-feather project]]
+[[packaging library for the computercraft mod, part of the cc-feather project]]
 
 local url = "github.com/birbirl/CC-Feather"
 local manifest = "feather"
 
-local dir = type .. "/"
-if type == "lib" then
-	dir = dir .. manifest .. "/"
-end
+local dir = type .. "/" .. manifest .. "/" .. pkgname
 
 rockspec_format = "3.0"
-package = manifest .. "." .. pkgname
+package = dir:gsub("/", ".")
 version = ver
 
 description = {
@@ -31,7 +28,7 @@ build = {
 
 source = {
 	url = "git://" .. url .. ".git", -- not compatible with luarocks
-	dir = dir .. pkgname
+	dir = dir
 }
 
 dependencies = {}
