@@ -42,9 +42,9 @@ local function handleRequest(sender, message)
 	local struct
 	if contents.packageType == "lib" then
 		local pkgPath = contents.packageName:gsub(".", "/")
-		struct = storage.encode(fs.combine(feather.path(), "lib", pkgPath))
+		struct = storage.encode(fs.combine(feather.installPath(), "lib", pkgPath))
 	else
-		struct = storage.encode(fs.combine(feather.path(), "bin", contents.packageName .. ".lua"))
+		struct = storage.encode(fs.combine(feather.installPath(), "bin", contents.packageName))
 	end
 
 	answer.contents.entry = struct

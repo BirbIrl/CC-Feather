@@ -1,5 +1,6 @@
 {
   [ "list.show_hidden" ] = true,
   [ "motd.enable" ] = false,
+  [ "shell.allow_disk_startup" ] = false,
   [ "feather.bundle.mirrorID" ] = 2,
 }

@@ -1,4 +1,3 @@
-local pp = require("cc.pretty").pretty_print
 local function describeArg(argument, desc)
 	term.setTextColor(colors.gray)
 	write("\n" .. arg[0] .. " ")
@@ -26,13 +25,12 @@ local function deserialiseFile(path)
 end
 
 ---@param drive ccTweaked.peripheral.Drive
-function install(drive)
+local function install(drive)
 	local mountPath = assert(drive.getMountPath())
 	local mirrorID = settings.get("feather.bundle.mirrorID", os.getComputerID())
 	local paths = {
-		".feather/bin/featherOS.lua",
-		".feather/bin/bundle.lua",
-		".feather/bin/runner.lua",
+		".feather/bin/featherOS",
+		".feather/bin/bundle",
 		".feather/lib/feather/storage"
 	}
 	for _, path in ipairs(paths) do
@@ -62,7 +60,7 @@ if force then
 	install(drives[1])
 	return
 end
-
+help()
 print("Do you wish to install FeatherOS to the attached computer? Y/n")
 repeat
 	local _, result = os.pullEvent("key")

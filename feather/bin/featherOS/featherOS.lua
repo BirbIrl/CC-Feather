@@ -26,14 +26,37 @@ local function bundle(path)
 	return module
 end
 
+---@class feather.featherOS.featherGlobal
 local feather = {}
+
 
 function feather.getVersion()
 	return "FeatherOS " .. version
 end
 
-function feather.path()
-	return fs.getDir(fs.getDir(debug.getinfo(1).source:sub(2, -1))) -- yep.
+-- path of the current feather installation
+function feather.installPath()
+	return fs.getDir(fs.getDir(fs.getDir(debug.getinfo(1).source:sub(2, -1)))) -- yep.
+end
+
+local staticPath = shell.path()
+
+--- allows adding entries to the PATH without it getting overriden
+function feather.addToPath(path)
+	staticPath = staticPath .. ":" .. path
+	feather.updatePath()
+end
+
+function feather.updatePath()
+	shell.setPath(staticPath)
+
+	local binPath = fs.combine(feather.installPath(), "bin")
+	for _, entry in ipairs(fs.list(binPath)) do
+		local programPath = fs.combine(binPath, entry)
+		if fs.isDir(programPath) then
+			shell.setPath(shell.path() .. ":" .. programPath)
+		end
+	end
 end
 
 local argument, customPath = ...
@@ -45,7 +68,7 @@ if argument == "install" then
 	else
 		startup = assert(fs.open(startupPath, "r+"))
 	end
-	local snippet = 'shell.run(".feather/bin/featherOS", "startup") --don\'t touch'
+	local snippet = 'shell.run(".feather/bin/featherOS/featherOS", "startup") --don\'t touch'
 	local line = startup.readLine()
 	if line ~= snippet then
 		startup.seek("set")
@@ -68,7 +91,7 @@ elseif argument == "startup" then
 	_G.os.version = feather.getVersion
 	_G.feather = feather
 	_G.bundle = bundle
-	shell.setPath(shell.path() .. ":.feather/bin")
+	feather.updatePath()
 	term.setCursorPos(1, 1)
 	term.clear()
 	term.setTextColor(colors.yellow)
