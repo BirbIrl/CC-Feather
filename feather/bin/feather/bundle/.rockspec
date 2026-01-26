@@ -1,10 +1,11 @@
-local pkgname = "storage"
-local type = "lib"
+local pkgname = "bundle"
+local type = "bin"
 local ver = "unstable"
-local summary = "filesystem lib for computercraft"
-local detailed =
-[[filesystem library for the computercraft mod, part of the cc-feather project]]
-local deps = {}
+local summary = "CLI for feather.lib.bundle"
+local detailed = [[
+A computercraft package manager for FeatherOS
+]]
+local deps = { "lib.feather.bundle" }
 
 local url = "github.com/birbirl/CC-Feather"
 local manifest = "feather"

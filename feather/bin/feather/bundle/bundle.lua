@@ -21,13 +21,26 @@ local function help()
 	describeArg("uninstall [pkg]", "uninstalls a local program")
 end
 
+local function install(pkgName)
+	print("Fetching " .. pkgName)
+	assert(bundle.install(pkgName), "Couldn't install " .. pkgName .. ", the mirror might be down.") --TODO: log this stuff properly
+	local spec = bundle.get(pkgName)
+	assert(spec, "somehow, we installed the package successfuly but can't find it. This shouldn't ever happen!")
+	print(pkgName .. " successfully installed")
+
+	for dependencyName, _ in pairs(bundle.listMissingDependencies(spec)) do
+		print("Dependency" .. dependencyName .. " is missing, resolving")
+		install(dependencyName)
+	end
+end
+
 
 local mode, pkgName = ...
 if mode == "get" then
-	bundle.install("lib.feather." .. pkgName)
+	install("lib.feather." .. pkgName)
 elseif mode == "remove" then
 elseif mode == "install" then
-	bundle.install("bin.feather." .. pkgName)
+	install("bin.feather." .. pkgName)
 elseif mode == "uninstall" then
 else
 	help()

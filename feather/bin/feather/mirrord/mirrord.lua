@@ -1,3 +1,4 @@
+local pp = require("cc.pretty").pretty_print
 local storage = bundl "feather.storage" ---@type feather.storage
 
 peripheral.find("modem", rednet.open)
@@ -50,6 +51,7 @@ while true do
 	local sender, message = rednet.receive(protocol) ---@diagnostic disable-line
 	assert(sender and type(message) == "table")
 	if message.request_type == "bundleGet" then
+		pp(message)
 		handleRequest(sender, message --[[@as feather.mirrord.message.bundle.get]])
 	end
 end

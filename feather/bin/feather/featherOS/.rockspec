@@ -4,6 +4,7 @@ local ver = "unstable"
 local summary = "TBA"
 local detailed =
 [[TBA]]
+local deps = {}
 
 local url = "github.com/birbirl/CC-Feather"
 local manifest = "feather"
@@ -31,4 +32,4 @@ source = {
 	dir = dir
 }
 
-dependencies = {}
+dependencies = deps

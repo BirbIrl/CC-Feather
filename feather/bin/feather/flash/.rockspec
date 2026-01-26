@@ -1,10 +1,11 @@
-local pkgname = "storage"
-local type = "lib"
+---@diagnostic disable
+local pkgname = "flash"
+local type = "bin"
 local ver = "unstable"
-local summary = "filesystem lib for computercraft"
+local summary = "CLI for flashing FeatherOS on Computercraft computers"
 local detailed =
-[[filesystem library for the computercraft mod, part of the cc-feather project]]
-local deps = {}
+[[Command line tool for copying a modifiable installation of FeatherOS onto another computer]]
+local deps = { "bin.feather.featherOS" }
 
 local url = "github.com/birbirl/CC-Feather"
 local manifest = "feather"

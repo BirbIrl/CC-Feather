@@ -23,7 +23,7 @@ local storage = bundl "feather.storage" ---@type feather.storage
 ---@class feather.bundle.rockspec.build
 ---@field type "lib"|"bin" -- indicates whether the package is a library or binary
 
-
+---@alias feather.bundle.packageTable table<string, feather.bundle.rockspec>
 
 local function getMirrorID()
 	local mirrorID = settings.get("feather.bundle.mirrorID")
@@ -48,31 +48,47 @@ local function loadRockspec(path)
 	return config
 end
 
+
 ---@param rockspec feather.bundle.rockspec
----@param list? feather.bundle.rockspec[] -- optionally list cached list of installed packages to prevent re-checking
----@return string[] -- names of missing dependencies
-local function listMissingDependencies(rockspec, list)
-
-end
-
-
----@return feather.bundle.rockspec[]
-function module.listInstalled()
-	local packages = {}
-	local libPath = fs.combine(feather.installPath(), "lib")
-	for _, manifestName in ipairs(fs.list(libPath)) do
-		local manifestPath = fs.combine(libPath, manifestName)
-		for _, packageName in ipairs(fs.list(manifestPath)) do
-			local rockspec = loadRockspec(fs.combine(manifestPath, packageName, ".rockspec"))
-			packages[#packages + 1] = rockspec
+---@return table<string, true> -- names of missing dependencies
+function module.listMissingDependencies(rockspec)
+	local missing = {}
+	if not next(rockspec.dependencies) then
+		return missing
+	end
+	local list = module.listInstalled()
+	for _, dependency in pairs(rockspec.dependencies) do
+		if not list[dependency] then
+			missing[dependency] = true
 		end
 	end
-	local binPath = fs.combine(feather.installPath(), "bin")
-	for _, packageName in ipairs(fs.list(binPath)) do
-		local rockspec = loadRockspec(fs.combine(binPath, packageName, ".rockspec"))
-		packages[#packages + 1] = rockspec
+	return missing
+end
+
+---@return feather.bundle.packageTable
+function module.listInstalled()
+	local packages = {}
+	local installPath = feather.installPath()
+	for _, typePath in pairs({ "lib", "bin" }) do
+		typePath = fs.combine(installPath, typePath)
+		for _, manifestName in ipairs(fs.list(typePath)) do
+			local manifestPath = fs.combine(typePath, manifestName)
+			for _, packageName in ipairs(fs.list(manifestPath)) do
+				local rockspec = loadRockspec(fs.combine(manifestPath, packageName, ".rockspec"))
+				if rockspec then
+					packages[rockspec.package] = rockspec
+				end
+			end
+		end
 	end
 	return packages
+end
+
+---@param pkgName string
+---@return feather.bundle.rockspec?
+function module.get(pkgName)
+	local pkgPath = pkgName:gsub("%.", "/")
+	return loadRockspec(fs.combine(feather.installPath(), pkgPath, ".rockspec"))
 end
 
 ---@param pkgName string

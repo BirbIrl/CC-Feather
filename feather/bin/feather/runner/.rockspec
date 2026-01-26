@@ -1,9 +1,9 @@
-local pkgname = "storage"
-local type = "lib"
+local pkgname = "runner"
+local type = "bin"
 local ver = "unstable"
-local summary = "filesystem lib for computercraft"
+local summary = "TBA"
 local detailed =
-[[filesystem library for the computercraft mod, part of the cc-feather project]]
+[[TBA]]
 local deps = {}
 
 local url = "github.com/birbirl/CC-Feather"

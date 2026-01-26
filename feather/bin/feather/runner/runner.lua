@@ -23,7 +23,7 @@ if headless == "headless" then
 	assert(programName, "No program provided.")
 	assert(shell.resolveProgram(programName), "Program: \"" .. programName .. "\" not valid.")
 	local function eventWatcher()
-		os.pullEvent("featherRunnerTerminate:" .. programName)
+		os.pullEvent("runnerTerminate:" .. programName)
 	end
 
 	local function executor()

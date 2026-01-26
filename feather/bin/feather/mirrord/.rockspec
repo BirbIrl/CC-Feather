@@ -1,10 +1,11 @@
-local pkgname = "storage"
-local type = "lib"
+---@diagnostic disable
+local pkgname = "mirrord"
+local type = "bin"
 local ver = "unstable"
-local summary = "filesystem lib for computercraft"
+local summary = "backend for lib.feather.bundle for ComputerCraft"
 local detailed =
-[[filesystem library for the computercraft mod, part of the cc-feather project]]
-local deps = {}
+[[mirrord is a daemon that servers installed lib.feather.bundle pacakges to other computers that wish to use the bin.feather.bundle packager]]
+local deps = { "lib.feather.storage", "bin.feather.featherOS" }
 
 local url = "github.com/birbirl/CC-Feather"
 local manifest = "feather"
