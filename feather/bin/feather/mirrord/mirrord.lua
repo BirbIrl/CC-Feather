@@ -9,7 +9,7 @@ rednet.host(protocol, os.getComputerLabel() or "unlabelled")
 ---@alias feather.mirrord.message.id number
 
 ---@class feather.mirrord.message
----@field request_type string
+---@field request_type string -- trying to push this out in favor of protocols
 ---@field time number -- obtained from os.time("local")
 ---@field id feather.mirrord.message.id -- obtained from math.random()
 ---@field respondsTo feather.mirrord.message.id?
@@ -19,10 +19,12 @@ rednet.host(protocol, os.getComputerLabel() or "unlabelled")
 ---@class feather.mirrord.message.bundle.get: feather.mirrord.message
 ---@field request_type "bundleGet"
 ---@field contents {packageName: string}
+---@field respondsTo nil
 
 ---@class feather.mirrord.message.bundle.post: feather.mirrord.message
 ---@field request_type "bundlePost"
 ---@field contents {packageName: string, entry: feather.storage.entryStruct}
+---@field respondsTo feather.mirrord.message.id
 
 
 ---@param sender number

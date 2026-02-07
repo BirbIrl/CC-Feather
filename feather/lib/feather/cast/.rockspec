@@ -1,10 +1,10 @@
-local pkgname = "bundle"
+local pkgname = "cast"
 local type = "lib"
 local ver = "unstable"
-local summary = "packaging lib for computercraft"
+local summary = "network object access lib for computercraft"
 local detailed =
-[[packaging library for the computercraft mod, part of the cc-feather project]]
-local deps = { "bin.feather.featherPS", "lib.feather.storage" }
+[[universal way of passing an object onto the network for any other computercraft computer to use, part of the cc-feather project]]
+local deps = {}
 
 local url = "github.com/birbirl/CC-Feather"
 local manifest = "feather"
