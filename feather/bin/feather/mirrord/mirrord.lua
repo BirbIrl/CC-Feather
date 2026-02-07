@@ -4,7 +4,7 @@ local storage = bundl "feather.storage" ---@type feather.storage
 peripheral.find("modem", rednet.open)
 assert(rednet.isOpen(), "Must have connected modem")
 local protocol = "feather.mirrord"
-rednet.host(protocol, os.getComputerLabel() or ("Unnamed Computer nr." .. os.getComputerID()))
+rednet.host(protocol, os.getComputerLabel() or "unlabelled")
 
 ---@alias feather.mirrord.message.id number
 

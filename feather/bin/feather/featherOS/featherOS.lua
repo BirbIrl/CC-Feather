@@ -20,7 +20,7 @@ end
 
 local function bundl(path)
 	local oldPath = package.path
-	package.path = package.path .. ";/.feather/lib/?/init.lua"
+	package.path = package.path .. ";/.feather/lib/?/init.lua" .. ";/.feather/lib/?.lua"
 	local module = require(path)
 	package.path = oldPath
 	return module

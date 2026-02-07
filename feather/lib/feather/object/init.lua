@@ -16,7 +16,7 @@ end
 --- checks if this is an instance of any class
 ---@return boolean isInstance true if it's an instance, false if it's a class
 function Class:isInstance()
-	return self.__index ~= self
+	return self.__index ~= self -- and yet work it does
 end
 
 --- checks if this is an instance of a specific class
@@ -29,7 +29,7 @@ function Class:instanceOf(class, strict)
 	repeat
 		if thisClass == class then return true end
 		thisClass = thisClass:getClass()
-	until strict or not thisClass
+	until strict or thisClass == Class or not thisClass
 	return false
 end
 
