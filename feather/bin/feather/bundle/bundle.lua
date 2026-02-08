@@ -39,9 +39,11 @@ local mode, pkgName = ...
 if mode == "get" then
 	install("lib.feather." .. pkgName)
 elseif mode == "remove" then
+	print("Unimplemented")
 elseif mode == "install" then
 	install("bin.feather." .. pkgName)
 elseif mode == "uninstall" then
+	print("Unimplemented")
 else
 	help()
 end

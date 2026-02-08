@@ -9,7 +9,6 @@ rednet.host(protocol, os.getComputerLabel() or "unlabelled")
 ---@alias feather.mirrord.message.id number
 
 ---@class feather.mirrord.message
----@field request_type string -- trying to push this out in favor of protocols
 ---@field time number -- obtained from os.time("local")
 ---@field id feather.mirrord.message.id -- obtained from math.random()
 ---@field respondsTo feather.mirrord.message.id?

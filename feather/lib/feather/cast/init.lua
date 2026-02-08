@@ -63,12 +63,22 @@ end
 ---@param message any
 ---@param callerId integer
 ---@param hostId integer
-local function makeErrorText(message, callerId, hostId)
-	return "CAST REMOTE ERROR" ..
+---@param key string
+---@param ... any
+local function makeErrorText(message, callerId, hostId, key, ...)
+	local full = "CAST REMOTE ERROR" ..
 		"\n Caller ID: " .. callerId ..
 		"\n Host ID: " .. hostId ..
-		"\n Host Error Message: \n" ..
-		tostring(message)
+		"\n Key: " .. key ..
+		"\n Args: "
+	local args = table.pack(...)
+	for i = 1, args.n, 1 do
+		full = full .. tostring(args[i]) .. ", "
+	end
+	full = full:sub(1, -1)
+	full = full .. "\nHost Error Message: \n" .. tostring(message)
+
+	return message
 end
 
 local function onIndex(self, key)
@@ -84,7 +94,8 @@ local function onIndex(self, key)
 			---@type number, feather.cast.message.answer
 			id, answer = rednet.receive("feather.cast.answer")
 		until id == hostId and answer.respondsTo == message.id
-		assert(answer.contents.success, makeErrorText(answer.contents.returnValues[1], os.getComputerID(), hostId))
+		assert(answer.contents.success,
+			makeErrorText(answer.contents.returnValues[1], os.getComputerID(), hostId, key, ...))
 		return table.unpack(answer.contents.returnValues)
 	end
 end
@@ -136,10 +147,14 @@ function module.processBroadcastedObjects()
 	end
 end
 
+---@param targetId? integer
 ---@return feather.cast.remoteAccessor
-function module.capture()
-	---@type number, feather.cast.message.broadcast
-	local id, answer = rednet.receive("feather.cast.broadcast") ---@diagnostic disable-line
+function module.capture(targetId)
+	local id, answer
+	repeat
+		---@type number, feather.cast.message.broadcast
+		id, answer = rednet.receive("feather.cast.broadcast") ---@diagnostic disable-line
+	until id == targetId or not targetId
 	return getCastedObject(id, answer.contents.linkId)
 end
 
