@@ -116,7 +116,7 @@ function module.broadcast(object, hostId)
 end
 
 local function callObjectAndCaptureError(trackedObjects, linkId, key, args)
-	return table.pack(trackedObjects[linkId][key](args))
+	return table.pack(trackedObjects[linkId][key](table.unpack(args)))
 end
 
 function module.processBroadcastedObjects()
@@ -127,7 +127,7 @@ function module.processBroadcastedObjects()
 		local args = call.contents.args
 		local key = call.contents.key
 		local linkId = call.contents.linkId
-		local success, result = pcall(callObjectAndCaptureError, trackedObjects, linkId, key, table.unpack(args))
+		local success, result = pcall(callObjectAndCaptureError, trackedObjects, linkId, key, args)
 		if not success then
 			result = table.pack(result) -- wrap the error message in a table
 		end
