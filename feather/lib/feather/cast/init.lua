@@ -1,5 +1,7 @@
----@class feather.cast
-local module = {}
+---@class feather.cast.instance
+---@field trackedObjects table<number, table>
+local cast = {}
+cast.__index = cast
 
 ---@class feather.cast.message: feather.mirrord.message
 
@@ -15,6 +17,11 @@ local module = {}
 ---@field contents {linkId: number}
 ---@field respondsTo nil
 
+---@class feather.cast.message.drop: feather.cast.message.broadcast
+
+
+
+local protocol = "feather.cast"
 
 ---@param linkId number
 ---@param key any
@@ -58,7 +65,15 @@ local function makeAnswerMessage(callId, returnValues, success)
 	}
 end
 
-
+---@return feather.cast.message.drop
+local function makeDropMessage(linkId)
+	return {
+		time = os.time("local"),
+		id = math.random(),
+		request_type = "castAnswer",
+		contents = { linkId = linkId }
+	}
+end
 
 ---@param message any
 ---@param callerId integer
@@ -81,6 +96,7 @@ local function makeErrorText(message, callerId, hostId, key, ...)
 	return message
 end
 
+
 local function onIndex(self, key)
 	local hostId = rawget(self, "__hostId")
 	local linkId = rawget(self, "__linkId")
@@ -92,12 +108,77 @@ local function onIndex(self, key)
 		local id, answer
 		repeat
 			---@type number, feather.cast.message.answer
-			id, answer = rednet.receive("feather.cast.answer")
+			id, answer = rednet.receive(protocol .. ".answer")
 		until id == hostId and answer.respondsTo == message.id
 		assert(answer.contents.success,
 			makeErrorText(answer.contents.returnValues[1], os.getComputerID(), hostId, key, ...))
 		return table.unpack(answer.contents.returnValues)
 	end
+end
+
+
+
+---@param object table
+---@param hostId? integer
+function cast:broadcast(object, hostId)
+	local message = makeBroadcastMessage()
+	local linkId = message.contents.linkId
+	if hostId then
+		rednet.send(hostId, message, protocol .. ".broadcast")
+	else
+		rednet.broadcast(message, protocol .. ".broadcast")
+	end
+	self.trackedObjects[linkId] = object
+	return object, linkId
+end
+
+local function callObjectAndCaptureError(trackedObjects, linkId, key, args)
+	return table.pack(trackedObjects[linkId][key](table.unpack(args)))
+end
+
+
+function cast:processBroadcastedObjects()
+	--TODO: Handle metatables that point to a local object
+	while true do
+		local callerId, call
+		os.queueEvent("feather.cast.processing", true)
+		callerId, call, messageProtocol = rednet.receive(nil, 1) ---@diagnostic disable-line
+		if callerId and call then
+			if messageProtocol == protocol .. ".call" then
+				local args = call.contents.args
+				local key = call.contents.key
+				local linkId = call.contents.linkId
+				local success, result = pcall(callObjectAndCaptureError, self.trackedObjects, linkId, key, args)
+				if not success then
+					result = table.pack(result) -- wrap the error message in a table
+				end
+				local answer = makeAnswerMessage(call.id, result, success)
+				rednet.send(callerId, answer, protocol .. ".answer")
+			elseif messageProtocol == protocol .. ".drop" then
+				self.trackedObjects[call.contents.linkId] = nil
+			end
+		end
+	end
+end
+
+function cast:makeParallelProcessor()
+	return function()
+		self:processBroadcastedObjects()
+	end
+end
+
+---@param castedObject any
+function cast:drop(castedObject)
+	local linkId, hostId = castedObject.__linkId, castedObject.__hostId
+	rednet.send(hostId, makeDropMessage(linkId), protocol .. ".drop")
+end
+
+---@class feather.cast
+module = {}
+
+---@return feather.cast.instance
+function module.new()
+	return setmetatable({ trackedObjects = {} }, cast)
 end
 
 local function getCastedObject(hostId, linkId)
@@ -109,51 +190,13 @@ local function getCastedObject(hostId, linkId)
 	)
 end
 
----@type table<number, table>
-local trackedObjects = {}
-
----@param object table
----@param hostId? integer
-function module.broadcast(object, hostId)
-	local message = makeBroadcastMessage()
-	local linkId = message.contents.linkId
-	if hostId then
-		rednet.send(hostId, message, "feather.cast.broadcast")
-	else
-		rednet.broadcast(message, "feather.cast.broadcast")
-	end
-	trackedObjects[linkId] = object
-	return object, linkId
-end
-
-local function callObjectAndCaptureError(trackedObjects, linkId, key, args)
-	return table.pack(trackedObjects[linkId][key](table.unpack(args)))
-end
-
-function module.processBroadcastedObjects()
-	--TODO: Handle metatables that point to a local object
-	while true do
-		---@type number, feather.cast.message.call
-		local callerId, call = rednet.receive("feather.cast.call") ---@diagnostic disable-line
-		local args = call.contents.args
-		local key = call.contents.key
-		local linkId = call.contents.linkId
-		local success, result = pcall(callObjectAndCaptureError, trackedObjects, linkId, key, args)
-		if not success then
-			result = table.pack(result) -- wrap the error message in a table
-		end
-		local answer = makeAnswerMessage(call.id, result, success)
-		rednet.send(callerId, answer, "feather.cast.answer")
-	end
-end
-
 ---@param targetId? integer
 ---@return feather.cast.remoteAccessor
 function module.capture(targetId)
 	local id, answer
 	repeat
 		---@type number, feather.cast.message.broadcast
-		id, answer = rednet.receive("feather.cast.broadcast") ---@diagnostic disable-line
+		id, answer = rednet.receive(protocol .. ".broadcast") ---@diagnostic disable-line
 	until id == targetId or not targetId
 	return getCastedObject(id, answer.contents.linkId)
 end

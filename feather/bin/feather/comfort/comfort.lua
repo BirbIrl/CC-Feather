@@ -83,6 +83,8 @@ end
 
 
 local cast = bundl "feather.cast" ---@type feather.cast
+local castInstance = cast.new()
+
 if computerId then
 	rednet.send(computerId, makeStartMessage(), protocol .. ".start")
 	local id = rednet.receive(protocol .. ".start", 1)
@@ -90,8 +92,8 @@ if computerId then
 	assert(id == computerId, "A Computer with the id: " .. id .. " seems to be intercepting the connection")
 
 	local win = makeFullScreenWindow()
-	cast.broadcast(win)
-	parallel.waitForAny(sendInputs, handleStop, cast.processBroadcastedObjects)
+	castInstance:broadcast(win)
+	parallel.waitForAny(sendInputs, handleStop, castInstance:makeParallelProcessor())
 	term.setCursorPos(1, 1)
 	term.clear()
 	rednet.send(computerId, makeStopMessage(), protocol .. ".stop")

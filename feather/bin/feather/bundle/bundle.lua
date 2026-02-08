@@ -29,7 +29,7 @@ local function install(pkgName)
 	print(pkgName .. " successfully installed")
 
 	for dependencyName, _ in pairs(bundle.listMissingDependencies(spec)) do
-		print("Dependency" .. dependencyName .. " is missing, resolving")
+		print("Dependency " .. dependencyName .. " is missing, resolving")
 		install(dependencyName)
 	end
 end
