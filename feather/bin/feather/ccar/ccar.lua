@@ -8,6 +8,7 @@ local function describeArg(argument, desc)
 	term.setTextColor(colors.white)
 	print(" - " .. desc)
 end
+
 local path, archiveName = ...
 if not path then
 	term.setTextColor(colors.yellow)
@@ -39,23 +40,59 @@ local function decode(entry, path)
 	end
 ]]
 )
+
 archive.write("local archive =" .. textutils.serialise(storage.encode(path)))
 archive.write([[
+local function y()
+	term.setTextColor(colors.yellow)
+end
+local function r()
+	term.setTextColor(colors.red)
+end
+local function w()
+	term.setTextColor(colors.white)
+end
+local function prompt()
+	y()
+	write("Y")
+	w()
+	write("/")
+	y()
+	print("N")
+	w()
+	write(">")
+	y()
+	return read(nil, { "Y", "N" }, nil, "Y"):upper() ~= "Y"
+end
+
+local curr = shell.getRunningProgram()
 local path = ... or archive.path
-print("Unpack the file in " .. path  .. "?")
-print("Y/N")
-if read(nil, { "Y", "N" }, nil, "Y") ~= "Y" then
+w()
+write("Unpack " )
+y()
+write(curr)
+w()
+write(" to ")
+y()
+write(path)
+w()
+print("?")
+
+if prompt() then
+	r()
 	print("Aborted")
 	return
 end
-print("Decoding...")
 decode(archive, path)
-local curr = shell.getRunningProgram()
-print("Delete the archive? (" .. curr .. ")")
-if read(nil, { "Y", "N" }, nil, "Y") ~= "Y" then
-	print("Skipped")
-	return
+print("Unpacked")
+w()
+write("Delete the archive: ")
+y()
+write(curr)
+w()
+print("?")
+if not prompt() then
+	fs.delete(curr)
+	print("Deleted")
 end
-fs.delete(curr)
-print("Deleted")
 ]])
