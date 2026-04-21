@@ -61,7 +61,7 @@ local function makeFullScreenWindow()
 end
 
 
-local computerId = tonumber(...)
+local computerId = ... and tonumber(...)
 local protocol = "feather.comfort"
 
 local function handleStop()
