@@ -2,7 +2,6 @@ local pretty = require "cc.pretty"
 local luzz = bundl "feather.luzz" ---@type feather.luzz
 
 local items = {
-	--[[
 	["minecraft:mossy_cobblestone"] = {
 		count = 22,
 	},
@@ -33,9 +32,6 @@ local items = {
 	["minecraft:smooth_basalt"] = {
 		count = 3,
 	},
-	["minecraft:stone"] = {
-		count = 64,
-	},
 	["minecraft:purpur_block"] = {
 		count = 19,
 	},
@@ -51,9 +47,6 @@ local items = {
 	["minecraft:stone_slab"] = {
 		count = 5,
 	},
-	["minecraft:stone_pressure_plate"] = {
-		count = 2,
-	},
 	["minecraft:amethyst_block"] = {
 		count = 20,
 	},
@@ -66,9 +59,14 @@ local items = {
 	["minecraft:stone_brick_slab"] = {
 		count = 12,
 	},
-	--]]
 	["minecraft:smooth_stone"] = {
 		count = 10,
+	},
+	["minecraft:stone"] = {
+		count = 64,
+	},
+	["minecraft:stone_pressure_plate"] = {
+		count = 2,
 	},
 }
 
@@ -96,6 +94,5 @@ local itemNames = {}
 for name, _ in pairs(items) do
 	itemNames[#itemNames + 1] = name
 end
-local rankedNames = luzz.rank(itemNames, "stone")
-pretty.pretty_print(rankedNames)
+local rankedNames = luzz.rank(itemNames, ... or "")
 printRanking(rankedNames)
