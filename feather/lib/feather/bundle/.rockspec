@@ -4,7 +4,7 @@ local ver = "unstable"
 local summary = "packaging lib for computercraft"
 local detailed =
 [[packaging library for the computercraft mod, part of the cc-feather project]]
-local deps = { "bin.feather.featherPS", "lib.feather.storage" }
+local deps = { "bin.feather.featherOS", "lib.feather.storage" }
 
 local url = "github.com/birbirl/CC-Feather"
 local manifest = "feather"
