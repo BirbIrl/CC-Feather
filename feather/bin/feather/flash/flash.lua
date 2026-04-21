@@ -62,6 +62,7 @@ if force then
 	return
 end
 help()
+print()
 print("Do you wish to install FeatherOS to the attached computer? Y/n")
 repeat
 	local _, result = os.pullEvent("key")
