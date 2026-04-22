@@ -95,26 +95,9 @@ elseif argument == "startup" then
 	_G.feather = feather
 	_G.bundl = bundl
 	feather.updatePath()
-	term.setCursorPos(1, 1)
-	term.clear()
-	term.setTextColor(colors.yellow)
-	print(feather.getVersion())
-	term.setTextColor(colors.white)
-	write("Computer ID: ")
-	term.setTextColor(colors.yellow)
-	write(tostring(os.getComputerID()))
-
-	local label = os.getComputerLabel()
-	if label then
-		term.setTextColor(colors.white)
-		write(' - "')
-		term.setTextColor(colors.yellow)
-		write(label)
-		term.setTextColor(colors.white)
-		write('"')
-	end
-
-	print()
+	local featherd = bundl("feather.featherd") --[[@as feather.featherd]]
+	featherd.init()
+	os.shutdown()
 elseif argument == nil then
 	help()
 end

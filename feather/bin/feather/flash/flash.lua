@@ -32,6 +32,8 @@ local function install(drive)
 		".feather/bin/feather/featherOS",
 		".feather/bin/feather/bundle",
 		".feather/lib/feather/bundle",
+		".feather/lib/feather/featherd",
+		".feather/bin/feather/featherd",
 		".feather/lib/feather/storage"
 	}
 	for _, path in ipairs(paths) do
@@ -41,6 +43,7 @@ local function install(drive)
 		end
 		fs.copy(path, combined)
 	end
+
 	shell.execute("featherOS", "install", fs.combine(mountPath, "startup.lua"))
 	local settingsFilePath = fs.combine(mountPath, ".settings")
 	local settings = deserialiseFile(settingsFilePath)
