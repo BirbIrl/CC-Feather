@@ -35,6 +35,7 @@ local exception = dofile("rom/modules/main/cc/internal/tiny_require.lua")("cc.in
 ---@class feather.featherd.unit
 ---@field command string
 ---@field onDeath featherd.featherd.process.onDeath?
+---@field useShell boolean?
 
 ---@type table<string,feather.featherd.unit>
 module.units = settings.get("feather.featherd.units", {})
@@ -77,8 +78,9 @@ end
 ---@param name string name of the unit you want to define
 ---@param command string command ran to start the unit
 ---@param onDeath featherd.featherd.process.onDeath thing to do when program dies/finishes
-function module.addUnit(name, command, onDeath)
-	module.units[name] = { command = command, onDeath = onDeath or "keep" }
+---@param useShell? boolean whether it should run with os.run or shell.run
+function module.addUnit(name, command, onDeath, useShell)
+	module.units[name] = { command = command, onDeath = onDeath or "keep", useShell = useShell }
 	settings.set("feather.featherd.units", module.units)
 	settings.save()
 end
@@ -179,6 +181,10 @@ function module.addProcess(name, fun, onDeath, exclusive)
 		process.thread = fun
 	elseif type(fun) == "string" then
 		process.thread = coroutine.create(function()
+			if module.units[name] and module.units[name].useShell then
+				shell.run(fun)
+				return
+			end
 			for path in shell.path():gmatch("[^:]+") do
 				path = fs.combine(path, fun)
 				if not fs.exists(path) or fs.isDir(path) then

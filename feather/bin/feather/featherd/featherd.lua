@@ -70,15 +70,17 @@ elseif mode == "listUnits" then
 		::continue::
 	end
 elseif mode == "addUnit" then
-	expect(2, name, "string")
 	---@type string
 	local command = arg[3]
-	expect(3, command, "string")
 	---@type featherd.featherd.process.onDeath
 	local onDeath = arg[4]
+	---@type "true"?
+	local useShell = arg[5]
+	expect(2, name, "string")
+	expect(3, command, "string")
 	assert(onDeath == nil or onDeath == "keep" or onDeath == "restart" or onDeath == "discard",
 		'onDeath must either be "keep", "restart", "discard" or not specified')
-	featherd.addUnit(name, command, onDeath or "keep")
+	featherd.addUnit(name, command, onDeath or "keep", useShell == "true")
 	term.setTextColor(colors.green)
 	print("Success!")
 elseif mode == "delUnit" then
