@@ -1,6 +1,16 @@
 {
-  [ "list.show_hidden" ] = true,
-  [ "motd.enable" ] = false,
   [ "shell.allow_disk_startup" ] = false,
+  [ "motd.enable" ] = false,
+  [ "feather.featherd.units" ] = {
+    mirrord = {
+      command = "mirrord",
+      onDeath = "keep",
+    },
+    comfortd = {
+      command = "comfortd",
+      onDeath = "keep",
+    },
+  },
   [ "feather.bundle.mirrorID" ] = 2,
+  [ "list.show_hidden" ] = true,
 }

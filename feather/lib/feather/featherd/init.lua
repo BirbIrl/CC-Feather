@@ -1,7 +1,7 @@
 local pretty = require("cc.pretty")
 ---@class feather.featherd
 local module = {}
-module.running = false
+module.locked = false
 ---@type feather.featherd.process[]
 module.processesByPid = {}
 ---@type table<thread,feather.featherd.process>
@@ -16,6 +16,7 @@ assert(logfile, "Couldn't open a file to save the log in")
 
 
 ---@alias feather.featherd.journalEntry.level "error"|"warning"|"message"
+---@alias featherd.featherd.process.onDeath "keep"|"restart"|"discard"
 ---
 ---@class feather.featherd.journalEntry
 ---@field level feather.featherd.journalEntry.level
@@ -23,50 +24,89 @@ assert(logfile, "Couldn't open a file to save the log in")
 ---@field name string
 ---@field pid integer
 
-
 local nextPid = 1
 
 local exception = dofile("rom/modules/main/cc/internal/tiny_require.lua")("cc.internal.exception")
 
+
+---A featherd unit is a configured program that will run once the pc loads, and will be kept track of.
+---the name of the program is defined in the key of the featherd units table
+---units use exclusive names always
+---@class feather.featherd.unit
+---@field command string
+---@field onDeath featherd.featherd.process.onDeath?
+
+---@type table<string,feather.featherd.unit>
+module.units = settings.get("feather.featherd.units", {})
+
+--- initializes featherd in it's full. should only be called by featherOS startup
 function module.init()
-	assert(not module.running, "featherd is already running!")
-	term.clear()
-	term.setCursorPos(1, 1)
-	term.setTextColor(colors.yellow)
-	print(feather.getVersion())
-	term.setTextColor(colors.white)
-	write("Computer ID: ")
-	term.setTextColor(colors.yellow)
-	write(tostring(os.getComputerID()))
-
-	local label = os.getComputerLabel()
-	if label then
-		term.setTextColor(colors.white)
-		write(' - "')
-		term.setTextColor(colors.yellow)
-		write(label)
-		term.setTextColor(colors.white)
-		write('"')
-	end
-
-	print()
+	assert(not module.locked, "featherd is already running!")
 	module.addProcess("mainShell", function()
-		term.setCursorPos(-30, 2)
-		shell.execute("shell")
+		shell.run("startup")
+		term.clear()
+		term.setCursorPos(1, 1)
+		term.setTextColor(colors.yellow)
+		print(feather.getVersion())
+		term.setTextColor(colors.white)
+		write("Computer ID: ")
+		term.setTextColor(colors.yellow)
+		write(tostring(os.getComputerID()))
+		local label = os.getComputerLabel()
+		if label then
+			term.setTextColor(colors.white)
+			write(' - "')
+			term.setTextColor(colors.yellow)
+			write(label)
+			term.setTextColor(colors.white)
+			write('"')
+		end
+		term.setCursorPos(-20, 2)
+		shell.run("shell")
 	end)
+	module.loadUnits()
 	module.runProcesses()
 end
 
+function module.loadUnits()
+	for name, unit in pairs(module.units) do
+		module.addProcess(name, unit.command, unit.onDeath, true)
+	end
+end
+
+---@param name string name of the unit you want to define
+---@param command string command ran to start the unit
+---@param onDeath featherd.featherd.process.onDeath thing to do when program dies/finishes
+function module.addUnit(name, command, onDeath)
+	module.units[name] = { command = command, onDeath = onDeath or "keep" }
+	settings.set("feather.featherd.units", module.units)
+	settings.save()
+end
+
+---Removes a unit from the config and saves it. returns true if it actually had to remove anything.
+---@param name string name of unit you want to remove
+---@return boolean
+function module.removeUnit(name)
+	if not module.units[name] then
+		return false
+	end
+	module.units[name] = nil
+	settings.set("feather.featherd.units", module.units)
+	settings.save()
+	return true
+end
+
+---Cycles through featherd processes to run them. Should only ever be ran once, and never touched
 function module.runProcesses()
-	assert(not module.running, "featherd is already running!")
-	assert(#module.processesByPid > 0, "featherd must have at least one task assigned")
-	module.running = true
+	assert(not module.locked, "featherd is already running!")
+	module.locked = true
 	local event = { n = 0 }
 	---@type feather.featherd.process[]
 	while true do
+		---@type feather.featherd.process[]
 		local toRestart = {}
 		for pid, process in pairs(module.processesByPid) do
-			if process.filter == nil or process.filter == event[1] or process.filter == "terminate" then
+			if coroutine.status(process.thread) ~= "dead" and process.filter == nil or process.filter == event[1] or process.filter == "terminate" then
 				local ok, param = coroutine.resume(process.thread, table.unpack(event, 1, event.n))
 				if ok then
 					process.filter = param
@@ -78,7 +118,7 @@ function module.runProcesses()
 			end
 
 			if coroutine.status(process.thread) == "dead" then
-				if not process.keepAfterDead then
+				if process.onDeath ~= "keep" then
 					module.processesByPid[pid] = nil
 					module.processesByThread[process.thread] = nil
 					for i, candidate in ipairs(module.processesByName[process.name]) do
@@ -88,18 +128,15 @@ function module.runProcesses()
 						end
 					end
 				end
-				if process.autoRestart then
+				if process.onDeath == "restart" then
 					toRestart[#toRestart + 1] = process
 				end
 			end
 		end
 		for _, process in ipairs(toRestart) do
 			module.processesByName[process.name].locked = nil
-			module.addProcess(process.name, process.fun, process.keepAfterDead, process.autoRestart)
+			module.addProcess(process.name, process.fun, process.onDeath)
 			os.queueEvent("feather.featherd.restarted", process)
-		end
-		if not module.processesByPid[1] then
-			return
 		end
 		event = table.pack(os.pullEventRaw())
 	end
@@ -113,15 +150,13 @@ end
 ---@field sharedObject any
 ---@field fun function
 ---@field pid integer
----@field keepAfterDead true?
----@field autoRestart true?
+---@field onDeath featherd.featherd.process.onDeath
 
 ---@param name string name of the process
----@param fun function function the process should run with
----@param keepAfterDeath true? when nil or false, the function will be removed from the pid tracking list when dead
----@param autoRestart true? when true, once the process ends or dies, it will be ran again
----@param exclusive true? when true, featherd wont allow making more than one living process under this name
-function module.addProcess(name, fun, keepAfterDeath, autoRestart, exclusive)
+---@param fun function|thread|string function the process should run with, string the process should run as command or thread
+---@param onDeath? featherd.featherd.process.onDeath what to do with the process once it ends
+---@param exclusive? true when true, featherd wont allow making more than one living process under this name
+function module.addProcess(name, fun, onDeath, exclusive)
 	module.processesByName[name] = module.processesByName[name] or {}
 	if (exclusive and module.processesByName[name][1]) or module.processesByName[name].locked then
 		error("Cannot create another exclusive process, it's already taken")
@@ -134,12 +169,30 @@ function module.addProcess(name, fun, keepAfterDeath, autoRestart, exclusive)
 		startTime = os.time("local"),
 		pid = pid,
 		name = name,
-		thread = coroutine.create(fun),
 		fun = fun,
 		exclusive = exclusive,
-		keepAfterDeath = keepAfterDeath,
-		autoRestart = autoRestart,
+		onDeath = onDeath or "discard"
 	}
+	if type(fun) == "function" then
+		process.thread = coroutine.create(fun)
+	elseif type(fun) == "thread" then
+		process.thread = fun
+	elseif type(fun) == "string" then
+		process.thread = coroutine.create(function()
+			for path in shell.path():gmatch("[^:]+") do
+				path = fs.combine(path, fun)
+				if not fs.exists(path) or fs.isDir(path) then
+					path = path .. ".lua"
+				end
+				if fs.exists(path) and not fs.isDir(path) then
+					os.run(_ENV, path)
+					return
+				end
+			end
+		end)
+	else
+		error("fun isn't a function. string or thread")
+	end
 	module.processesByPid[pid] = process
 	module.processesByThread[process.thread] = process
 	table.insert(module.processesByName[name], process)
@@ -175,8 +228,8 @@ function module.log(message, level, pidOrThread)
 	local entry = {
 		level = level,
 		message = message,
-		name = process.name,
-		pid = process.pid
+		name = (process and process.name) or "untracked",
+		pid = (process and process.pid) or 0
 	}
 	module.journal[#module.journal + 1] = entry
 

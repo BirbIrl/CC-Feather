@@ -91,13 +91,15 @@ if argument == "install" then
 		print("featherOS already installed.")
 	end
 elseif argument == "startup" then
+	if _G.feather then
+		return
+	end
+	local featherd = bundl "feather.featherd"
 	_G.os.version = feather.getVersion
 	_G.feather = feather
 	_G.bundl = bundl
 	feather.updatePath()
-	local featherd = bundl("feather.featherd") --[[@as feather.featherd]]
 	featherd.init()
-	os.shutdown()
 elseif argument == nil then
 	help()
 end
