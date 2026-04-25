@@ -67,6 +67,7 @@ function module.init()
 	end)
 	module.loadUnits()
 	module.runProcesses()
+	os.shutdown()
 end
 
 function module.loadUnits()
@@ -105,6 +106,9 @@ function module.runProcesses()
 	local event = { n = 0 }
 	---@type feather.featherd.process[]
 	while true do
+		if not module.processesByPid[1] then
+			break
+		end
 		---@type feather.featherd.process[]
 		local toRestart = {}
 		for pid, process in pairs(module.processesByPid) do
