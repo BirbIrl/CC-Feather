@@ -153,7 +153,6 @@ end
 ---@field name string
 ---@field filter string?
 ---@field thread thread
----@field sharedObject any
 ---@field fun function
 ---@field pid integer
 ---@field onDeath featherd.featherd.process.onDeath
@@ -240,12 +239,6 @@ function module.log(message, level, pidOrThread)
 
 	logfile.writeLine(journalEntryToPlainText(entry))
 	logfile.flush()
-end
-
----sets the given `sharedValue` as this process's sharedValue field
----@param sharedValue any
-function module.share(sharedValue)
-	module.processesByThread[coroutine.running()].sharedObject = sharedValue
 end
 
 function module.getNewestByName(name)
