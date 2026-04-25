@@ -28,6 +28,7 @@ end
 local cast = bundl "feather.cast" ---@type feather.cast
 local protocol = "feather.comfort"
 peripheral.find("modem", rednet.open)
+assert(rednet.isOpen(), "Must have a modem")
 rednet.host(protocol, os.getComputerLabel() or "unlabelled")
 
 
@@ -56,7 +57,7 @@ while true do
 	rednet.send(remoteId, makeStartMessage(), protocol .. ".start")
 	local remoteWindow = cast.capture(remoteId) --[[@as Window]]
 	local lastTerm = term.current()
-
+	local lastTab = multishell.getFocus()
 
 
 	local function processInputs()
@@ -64,7 +65,10 @@ while true do
 			---@type integer, feather.comfort.message.event
 			local id, message = rednet.receive(protocol .. ".event") ---@diagnostic disable-line
 			if id == remoteId then
-				multishell.setFocus(multishell.getCurrent())
+				if multishell.getFocus() ~= multishell.getCurrent() then
+					lastTab = multishell.getFocus()
+					multishell.setFocus(multishell.getCurrent())
+				end
 				os.queueEvent(message.contents.name, table.unpack(message.contents.data))
 			end
 		end
@@ -79,4 +83,5 @@ while true do
 	parallel.waitForAny(runShell, handleStop, processInputs)
 	rednet.send(remoteId, makeStopMessage(), protocol .. ".stop")
 	term.redirect(lastTerm)
+	multishell.setFocus(lastTab)
 end

@@ -86,6 +86,8 @@ local cast = bundl "feather.cast" ---@type feather.cast
 local castInstance = cast.new()
 
 if computerId then
+	peripheral.find("modem", rednet.open)
+	assert(rednet.isOpen(), "Must have a modem")
 	rednet.send(computerId, makeStartMessage(), protocol .. ".start")
 	local id = rednet.receive(protocol .. ".start", 1)
 	assert(id, "Computer didn't respond")
