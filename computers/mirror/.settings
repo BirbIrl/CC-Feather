@@ -1,17 +1,17 @@
 {
+  [ "list.show_hidden" ] = true,
   [ "shell.allow_disk_startup" ] = false,
+  [ "feather.bundle.mirrorID" ] = 2,
   [ "motd.enable" ] = false,
   [ "feather.featherd.units" ] = {
+    comfortd = {
+      command = "runner comfortd",
+      onDeath = "keep",
+      useShell = true,
+    },
     mirrord = {
       command = "mirrord",
       onDeath = "keep",
     },
-    comfortd = {
-      command = "runner comfortd",
-	  useShell = true,
-      onDeath = "keep",
-    },
   },
-  [ "feather.bundle.mirrorID" ] = 2,
-  [ "list.show_hidden" ] = true,
 }

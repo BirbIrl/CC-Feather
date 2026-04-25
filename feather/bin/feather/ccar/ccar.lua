@@ -39,10 +39,10 @@ local function decode(entry, path)
 	end
 	end
 ]]
-)
-
-archive.write("local archive =" .. textutils.serialise(storage.encode(path)))
-archive.write([[
+	..
+	"local archive =" .. textutils.serialise(storage.encode(path))
+	..
+	[[
 local function y()
 	term.setTextColor(colors.yellow)
 end

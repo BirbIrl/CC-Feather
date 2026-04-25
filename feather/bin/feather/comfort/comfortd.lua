@@ -1,3 +1,5 @@
+--TODO
+--this is kind of terrible, we shouldn't be using multishell for this. there's gotta be a better way to do this. i need to study multishell for it tho.
 local function describeArg(argument, desc)
 	term.setTextColor(colors.gray)
 	write("\n" .. arg[0])

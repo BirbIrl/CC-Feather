@@ -109,7 +109,7 @@ function module.install(pkgName)
 	local id, message
 	repeat
 		---@type number?, feather.mirrord.message.bundle.post
-		id, message = rednet.receive(protocol, 5) ---@diagnostic disable-line: assign-type-mismatch
+		id, message = rednet.receive(protocol, 1) ---@diagnostic disable-line: assign-type-mismatch
 		if not id then
 			return false
 		end

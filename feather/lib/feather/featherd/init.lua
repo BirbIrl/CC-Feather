@@ -1,4 +1,5 @@
 local pretty = require("cc.pretty")
+local exception = require("cc.internal.exception")
 ---@class feather.featherd
 local module = {}
 module.locked = false
@@ -10,8 +11,8 @@ module.processesByThread = {}
 module.processesByName = {}
 
 module.journal = {}
-local logfile = fs.open(
-	".feather/share/featherd/logs/" .. os.date("%Y-%m-%d-%T") --[[@as string]]:gsub(":", ".") .. ".txt", "w")
+local logPath = ".feather/share/featherd/logs/" .. os.date("%Y-%m-%d-%T"):gsub(":", ".") .. ".txt"
+local logfile = fs.open(logPath, "w")
 assert(logfile, "Couldn't open a file to save the log in")
 
 
@@ -26,7 +27,6 @@ assert(logfile, "Couldn't open a file to save the log in")
 
 local nextPid = 1
 
-local exception = dofile("rom/modules/main/cc/internal/tiny_require.lua")("cc.internal.exception")
 
 
 ---A featherd unit is a configured program that will run once the pc loads, and will be kept track of.
@@ -112,7 +112,7 @@ function module.runProcesses()
 				local ok, param = coroutine.resume(process.thread, table.unpack(event, 1, event.n))
 				if ok then
 					process.filter = param
-				elseif type(param) == "string" and exception.can_wrap_errors() then
+				elseif type(param) == "string" and exception and exception.can_wrap_errors and exception.can_wrap_errors() then
 					module.log(exception.make_exception(param, process.thread), "error", pid)
 				else
 					module.log(param, "error", pid)
@@ -185,15 +185,10 @@ function module.addProcess(name, fun, onDeath, exclusive)
 				shell.run(fun)
 				return
 			end
-			for path in shell.path():gmatch("[^:]+") do
-				path = fs.combine(path, fun)
-				if not fs.exists(path) or fs.isDir(path) then
-					path = path .. ".lua"
-				end
-				if fs.exists(path) and not fs.isDir(path) then
-					os.run(_ENV, path)
-					return
-				end
+			local path = shell.resolveProgram(fun)
+			if path then
+				loadfile(path, nil, _ENV)()
+				return
 			end
 		end)
 	else
@@ -240,6 +235,7 @@ function module.log(message, level, pidOrThread)
 	module.journal[#module.journal + 1] = entry
 
 	logfile.writeLine(journalEntryToPlainText(entry))
+	logfile.flush()
 end
 
 ---sets the given `sharedValue` as this process's sharedValue field

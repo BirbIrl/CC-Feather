@@ -11,7 +11,7 @@ local function help()
 	write("Runner")
 	term.setTextColor(colors.white)
 	print(
-		", a FeatherOS utility for running programs in a parllel. It allows terminating the new program with an event.")
+		", a FeatherOS utility for shoddily running programs in a parllel.")
 	describeArg("[program], [args]...",
 		"starts up [program] in a new tab with the given args")
 	describeArg("headless [program], [args]...", "starts up [program] in the current shell")
@@ -19,18 +19,9 @@ end
 local headless, programName = ...
 if headless == "headless" then
 	local args = table.pack(select(3, ...))
-
 	assert(programName, "No program provided.")
 	assert(shell.resolveProgram(programName), "Program: \"" .. programName .. "\" not valid.")
-	local function eventWatcher()
-		os.pullEvent("runnerTerminate:" .. programName)
-	end
-
-	local function executor()
-		shell.execute(programName, table.unpack(args))
-	end
-
-	parallel.waitForAny(executor, eventWatcher)
+	shell.execute(programName, table.unpack(args))
 elseif headless then
 	programName = headless
 	local args = table.pack(select(2, ...))

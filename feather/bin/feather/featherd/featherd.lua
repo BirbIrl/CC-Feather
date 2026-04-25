@@ -18,8 +18,8 @@ local function help()
 	describeArg("list", "lists all processes")
 	--describeArg("status [name]", "gets the status of a named process")
 	describeArg("listUnits", "lists all units")
-	describeArg("addUnit", "add a unit")
-	describeArg("delUnit", "delete a unit")
+	describeArg("addUnit [name] [command] [onDeath?] [useShell?]", "adds a unit")
+	describeArg("delUnit [name]", "deletes a unit")
 	--describeArg("delLogs", "deletes all logs")
 	--describeArg("currLog", "opens the current log file")
 	--describeArg("lastLog", "opens last boot's log file")
@@ -74,12 +74,13 @@ elseif mode == "addUnit" then
 	local command = arg[3]
 	---@type featherd.featherd.process.onDeath
 	local onDeath = arg[4]
-	---@type "true"?
+	---@type "true"|"y"|"Y"|"yes"?
 	local useShell = arg[5]
 	expect(2, name, "string")
 	expect(3, command, "string")
 	assert(onDeath == nil or onDeath == "keep" or onDeath == "restart" or onDeath == "discard",
 		'onDeath must either be "keep", "restart", "discard" or not specified')
+	assert(useShell == nil or useShell == "" or useShell == "true", "useShell must be either empty or equal true")
 	featherd.addUnit(name, command, onDeath or "keep", useShell == "true")
 	term.setTextColor(colors.green)
 	print("Success!")

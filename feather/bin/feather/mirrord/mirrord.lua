@@ -2,6 +2,7 @@ local storage = bundl "feather.storage" ---@type feather.storage
 local featherd = bundl "feather.featherd" ---@type feather.featherd
 
 peripheral.find("modem", rednet.open)
+--TODO: in featherd this doesn't log it outward, just prints to stdout
 assert(rednet.isOpen(), "Must have connected modem")
 local protocol = "feather.mirrord"
 rednet.host(protocol, os.getComputerLabel() or "unlabelled")
