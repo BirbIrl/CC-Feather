@@ -1,5 +1,5 @@
---TODO
---this is kind of terrible, we shouldn't be using multishell for this. there's gotta be a better way to do this. i need to study multishell for it tho.
+local exception = require("cc.internal.exception")
+local featherd = bundl("feather.featherd") ---@type feather.featherd
 local function describeArg(argument, desc)
 	term.setTextColor(colors.gray)
 	write("\n" .. arg[0])
@@ -45,27 +45,33 @@ end
 local makeStopMessage = makeStartMessage
 
 
+local function runThread(thread, window, ...)
+	local lastTerm = term.current()
+	term.redirect(window)
+	coroutine.resume(thread, ...)
+	term.redirect(lastTerm)
+end
 
----TODO: add error handling
+
+
+
+featherd.log("Initiating comfortd")
 while true do
 	---@type number, feather.comfort.message.start
 	local remoteId, message = rednet.receive(protocol .. ".start") ---@diagnostic disable-line
 	rednet.send(remoteId, makeStartMessage(), protocol .. ".start")
+
+	featherd.log("Comfortd connected with " .. remoteId)
 	local remoteWindow = cast.capture(remoteId) --[[@as Window]]
 
-
 	local thread = coroutine.create(function() shell.run("shell") end)
-
 
 	local function processInputs()
 		while true do
 			---@type integer, feather.comfort.message.event
 			local id, message = rednet.receive(protocol .. ".event") ---@diagnostic disable-line
 			if id == remoteId then
-				local lastTerm = term.current()
-				term.redirect(remoteWindow)
-				coroutine.resume(thread, message.contents.name, table.unpack(message.contents.data))
-				term.redirect(lastTerm)
+				runThread(thread, remoteWindow, message.contents.name, table.unpack(message.contents.data))
 			end
 		end
 	end
@@ -73,10 +79,7 @@ while true do
 		while true do
 			local event = table.pack(os.pullEvent())
 			if event[1] ~= "char" and event[1] ~= "key" and event[1] ~= "key_up" then
-				local lastTerm = term.current()
-				term.redirect(remoteWindow)
-				coroutine.resume(thread, table.unpack(event))
-				term.redirect(lastTerm)
+				runThread(thread, remoteWindow, table.unpack(event))
 			end
 		end
 	end
@@ -89,4 +92,6 @@ while true do
 
 	parallel.waitForAny(handleStop, processInputs, processEvents)
 	rednet.send(remoteId, makeStopMessage(), protocol .. ".stop")
+
+	featherd.log("Comfortd disconnected from " .. remoteId)
 end

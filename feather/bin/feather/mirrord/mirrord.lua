@@ -49,6 +49,8 @@ end
 
 
 
+
+featherd.log("Initiating mirrord")
 while true do
 	local sender, message = rednet.receive(protocol) ---@diagnostic disable-line
 	assert(sender and type(message) == "table")
