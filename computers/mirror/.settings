@@ -5,9 +5,8 @@
       onDeath = "keep",
     },
     comfortd = {
-      useShell = true,
-      onDeath = "remove",
-      command = "runner comfortd",
+      command = "comfortd",
+      onDeath = "keep",
     },
   },
   [ "list.show_hidden" ] = true,

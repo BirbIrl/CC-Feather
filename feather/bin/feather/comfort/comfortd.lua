@@ -45,19 +45,16 @@ end
 local makeStopMessage = makeStartMessage
 
 
-local function runShell()
-	shell.execute("shell")
-end
 
-
-print("Running the Comfortd daemon...")
+---TODO: add error handling
 while true do
 	---@type number, feather.comfort.message.start
 	local remoteId, message = rednet.receive(protocol .. ".start") ---@diagnostic disable-line
 	rednet.send(remoteId, makeStartMessage(), protocol .. ".start")
 	local remoteWindow = cast.capture(remoteId) --[[@as Window]]
-	local lastTerm = term.current()
-	local lastTab = multishell.getFocus()
+
+
+	local thread = coroutine.create(function() shell.run("shell") end)
 
 
 	local function processInputs()
@@ -65,23 +62,31 @@ while true do
 			---@type integer, feather.comfort.message.event
 			local id, message = rednet.receive(protocol .. ".event") ---@diagnostic disable-line
 			if id == remoteId then
-				if multishell.getFocus() ~= multishell.getCurrent() then
-					lastTab = multishell.getFocus()
-					multishell.setFocus(multishell.getCurrent())
-				end
-				os.queueEvent(message.contents.name, table.unpack(message.contents.data))
+				local lastTerm = term.current()
+				term.redirect(remoteWindow)
+				coroutine.resume(thread, message.contents.name, table.unpack(message.contents.data))
+				term.redirect(lastTerm)
+			end
+		end
+	end
+	local function processEvents()
+		while true do
+			local event = table.pack(os.pullEvent())
+			if event[1] ~= "char" and event[1] ~= "key" and event[1] ~= "key_up" then
+				local lastTerm = term.current()
+				term.redirect(remoteWindow)
+				coroutine.resume(thread, table.unpack(event))
+				term.redirect(lastTerm)
 			end
 		end
 	end
 	local function handleStop()
 		repeat
-			local id = rednet.receive(protocol .. ".stop")
-		until id == remoteId
+			local id = rednet.receive(protocol .. ".stop", 1)
+			local dead = coroutine.status(thread) == "dead"
+		until id == remoteId or dead
 	end
 
-	term.redirect(remoteWindow)
-	parallel.waitForAny(runShell, handleStop, processInputs)
+	parallel.waitForAny(handleStop, processInputs, processEvents)
 	rednet.send(remoteId, makeStopMessage(), protocol .. ".stop")
-	term.redirect(lastTerm)
-	multishell.setFocus(lastTab)
 end
