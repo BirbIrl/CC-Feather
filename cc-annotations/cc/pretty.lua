@@ -8,10 +8,22 @@
 ---Based on [*A Prettier Printer*](https://homepages.inf.ed.ac.uk/wadler/papers/prettier/prettier.pdf)
 ------
 ---[Official Documentation](https://tweaked.cc/library/cc.pretty.html)
+---@class ccTweaked.cc.pretty
 pretty = {}
+
 
 ---A document contains formatted text with multiple possible layouts.
 ---@class ccTweaked.cc.pretty.Doc
+---@field tag "text"|"next"|"concat"|"group"|"line"|"nil"
+
+---@class ccTweaked.cc.pretty.Doc.text: ccTweaked.cc.pretty.Doc
+---@field tag "text"
+---@field text string
+---@field colour ccTweaked.colors.color
+
+
+---@class ccTweaked.cc.pretty.Doc.concat: ccTweaked.cc.pretty.Doc
+---@field tag "concat"
 
 ---An empty document
 ---@type ccTweaked.cc.pretty.Doc
@@ -42,14 +54,14 @@ pretty.space_line = nil
 ---Create a new `Doc` from a string
 ---@param text string The string to construct a document from
 ---@param color? ccTweaked.colors.color The color to print the text in. Defaults to the current color
----@return ccTweaked.cc.pretty.Doc doc The document containing the provided text
+---@return ccTweaked.cc.pretty.Doc.text doc The document containing the provided text
 ------
 ---[Official Documentation](https://tweaked.cc/library/cc.pretty.html#v:text)
 function pretty.text(text, color) end
 
 ---Concatenate multiple documents into one
 ---@param ... ccTweaked.cc.pretty.Doc|string The documents to concat
----@return ccTweaked.cc.pretty.Doc doc The concatenated document
+---@return ccTweaked.cc.pretty.Doc.concat doc The concatenated document
 ------
 ---[Official Documentation](https://tweaked.cc/library/cc.pretty.html#v:concat)
 function pretty.concat(...) end

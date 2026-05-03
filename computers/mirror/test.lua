@@ -1,7 +1,8 @@
-local pp = require("cc.pretty").pretty_print
-local petty = bundl"feather.petty"
+local petty = bundl "feather.petty" ---@type lib.feather.petty
 
-
-local doc,lines  = petty.petty({"Hell", "o", "this is a test"}, 4)
-pp(doc)
-pp(lines)
+local doc, lines = petty.wrap(
+	petty.concat("Hiii hell ", petty.text("hii ", colors.red), petty.text("hii", colors.yellow)), 11)
+--local doc, lines = petty.wrap(petty.concat("Hiii hello, hi!", "hii"), 11)
+petty.pp(doc)
+petty.pp(lines)
+--print(lines)
