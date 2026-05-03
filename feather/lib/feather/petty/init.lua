@@ -24,10 +24,13 @@ end
 ---@param maxWidth integer
 ---@return ccTweaked.cc.pretty.Doc.text[] doc
 ---@return integer height
+---@return integer longestLine
 function module.wrap(subject, maxWidth)
+	assert(maxWidth > 0, "maxWidth must be more than 0. Currently: " .. maxWidth)
 	local doc = {}
-	local currWidth = 0
+	local takenWidth = 0
 	local lines = 1
+	local longestLine = 0
 	for _, text in ipairs(squash(subject)) do
 		local broken = ""
 		if text.tag == "text" then
@@ -39,21 +42,21 @@ function module.wrap(subject, maxWidth)
 				end
 				while #segment > 0 do
 					if breakingChar == "\n" then
-						currWidth = 0
+						takenWidth = 0
 						lines = lines + 1
 					elseif breakingChar == " " then
-						if currWidth + #segment + 1 <= maxWidth then
-							currWidth = currWidth + 1
+						if takenWidth + #segment + 1 <= maxWidth then
+							takenWidth = takenWidth + 1
 						else
 							breakingChar = "\n"
-							currWidth = 0
+							takenWidth = 0
 							lines = lines + 1
 						end
 					end
-
-					local spliceLength = maxWidth - currWidth
+					local spliceLength = math.min(maxWidth - takenWidth, #segment)
 					broken = broken .. breakingChar .. segment:sub(1, spliceLength)
-					currWidth = currWidth + #segment
+					takenWidth = takenWidth + #segment
+					longestLine = math.max(longestLine, takenWidth)
 					segment = segment:sub(spliceLength + 1)
 					breakingChar = "\n"
 				end
@@ -61,23 +64,39 @@ function module.wrap(subject, maxWidth)
 			doc[#doc + 1] = pretty.text(broken, text.colour)
 		elseif text.tag == "line" then
 			doc[#doc + 1] = text
-			currWidth = 0
+			takenWidth = 0
 			lines = lines + 1
 		else
 			assert(text.tag == "text", "Every element must be a text or line element")
 		end
 	end
-	return pretty.concat(table.unpack(doc)), lines
+	return pretty.concat(table.unpack(doc)), lines, longestLine
 end
 
 ---@param obj any The object to print
 ---@param options? prettyOptions Options for how certain things are displayed
----@param maxWidth? number The maximum fraction of the screen width that can be written to before wrapping. Defaults to 0.6
-function module.pp(obj, options, maxWidth)
+---@param maxSize? integer For docs, maximum number of newlines, for everything else, maximum fraction of the screen width that can be written to before wrapping. Defaults to 0.6
+function module.pp(obj, options, maxSize)
 	if getmetatable(obj) == docMt then
-		module.print(obj)
+		---@cast obj ccTweaked.cc.pretty.Doc
+		if maxSize and obj.tag == "concat" then
+			local lines = 1
+			local x, y  = term.getCursorPos()
+			for _, v in ipairs(squash(obj)) do
+				---@cast v ccTweaked.cc.pretty.Doc
+				if v.tag == "line" then
+					term.setCursorPos(x, y + lines)
+					lines = lines + 1
+				else
+					module.write(v)
+				end
+				if lines > maxSize then
+					break
+				end
+			end
+		end
 	else
-		module.pretty_print(obj, options, maxWidth)
+		module.pretty_print(obj, options, maxSize)
 	end
 end
 
