@@ -45,11 +45,15 @@ end
 local makeStopMessage = makeStartMessage
 
 
+---@return Window
 local function runThread(thread, window, ...)
 	local lastTerm = term.current()
 	term.redirect(window)
 	coroutine.resume(thread, ...)
+	local newWindow = term.current()
+	---@cast newWindow Window
 	term.redirect(lastTerm)
+	return newWindow
 end
 
 
@@ -71,7 +75,7 @@ while true do
 			---@type integer, feather.comfort.message.event
 			local id, message = rednet.receive(protocol .. ".event") ---@diagnostic disable-line
 			if id == remoteId then
-				runThread(thread, remoteWindow, message.contents.name, table.unpack(message.contents.data))
+				remoteWindow = runThread(thread, remoteWindow, message.contents.name, table.unpack(message.contents.data))
 			end
 		end
 	end
@@ -79,7 +83,7 @@ while true do
 		while true do
 			local event = table.pack(os.pullEvent())
 			if event[1] ~= "char" and event[1] ~= "key" and event[1] ~= "key_up" then
-				runThread(thread, remoteWindow, table.unpack(event))
+				remoteWindow = runThread(thread, remoteWindow, table.unpack(event))
 			end
 		end
 	end
