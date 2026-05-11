@@ -5,9 +5,10 @@ local petty = bundl "feather.petty" ---@type lib.feather.petty
 local config = lycantrophy.newConfig()
 config.maxSize = vec.new(10, 10)
 local textObject = lycantrophy.TextElement:new(petty.concat(petty.text("Word,", colors.green),
-	petty.text(" Loooooooooooo"), petty.text("OOO", colors.red), petty.text("ooooooongWooord!")), config)
+	petty.text(" Loooooooooooo"), petty.text("OOO", colors.red), petty.text("ooooooongWooord!")), "center", config)
 
 
-textObject:draw(vec.new(5, 5))
+textObject:draw(vec.new(20, 5))
+term.setBackgroundColor(colors.black)
 term.setCursorPos(1, 20)
 term.clearLine()

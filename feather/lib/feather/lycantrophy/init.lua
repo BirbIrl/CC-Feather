@@ -4,17 +4,17 @@ local vec = bundl("feather.vec2d") ---@type lib.feather.vec2d
 ---@class lib.feather.lycantrophy
 local module = {}
 
----@alias lib.feather.lycantrophy.config {minSize?: lib.feather.vec2d, maxSize?: lib.feather.vec2d, border?: boolean, margin?: integer, borderColor: ccTweaked.colors.color, backgroundColor: ccTweaked.colors.color}
+---@alias lib.feather.lycantrophy.config {
+---minSize?: lib.feather.vec2d,
+---maxSize?: lib.feather.vec2d,
+---backgroundColor: ccTweaked.colors.color }
 
 
 ---@type lib.feather.lycantrophy.config
 module.defaultConfig = {
 	minSize = vec.zero,
 	maxSize = vec.huge,
-	border = true,
-	margin = 1,
-	borderColor = colors.gray,
-	backgroundColor = colors.black,
+	backgroundColor = colors.blue,
 }
 
 ---@param template? lib.feather.lycantrophy.config
@@ -30,6 +30,7 @@ end
 
 ---@class lib.feather.lycantrophy.Element: lib.feather.object
 ---@field config lib.feather.lycantrophy.config
+---@field size? lib.feather.vec2d
 ---@field super lib.feather.object
 module.Element = Object:extend()
 
@@ -41,57 +42,66 @@ function module.Element:new(config)
 	return setmetatable(element, module.Element)
 end
 
-function module.Element:getAvailableSpace()
-	local space =
-		self.config.maxSize - self.config.margin * 2
-	return space
-end
-
 ---@param pos lib.feather.vec2d
----@param size? lib.feather.vec2d
-function module.Element:draw(pos, size)
-	size = size or vec.zero
-	local margin = self.config.margin
-	local to = pos + (size + margin * 2):max(self.config.minSize):min(self.config.maxSize) - vec.one
+function module.Element:draw(pos)
+	local to = pos + self:getSize() - vec.one
 	paintutils.drawFilledBox(pos.x, pos.y, to.x, to.y,
 		self.config.backgroundColor)
-	if self.config.border then
-		paintutils.drawBox(pos.x, pos.y, to.x, to.y,
-			self.config.borderColor)
-	end
 	term.setBackgroundColor(self.config.backgroundColor)
-	term.setCursorPos(pos.x + margin, pos.y + margin)
+end
+
+---@param size? lib.feather.vec2d
+function module.Element:resize(size)
+	self.size = size or self.config.minSize
+end
+
+function module.Element:getSize()
+	_ = self.size or self:resize()
+	return self.size
 end
 
 ---@class lib.feather.lycantrophy.TextElement: lib.feather.lycantrophy.Element
 ---@field text ccTweaked.cc.pretty.Doc.concat|ccTweaked.cc.pretty.Doc.text
----@field wrapped {text: ccTweaked.cc.pretty.Doc.concat, size: lib.feather.vec2d}
+---@field alignment lib.feather.petty.alignment
+---@field wrapped ccTweaked.cc.pretty.Doc.concat
 ---@field super lib.feather.lycantrophy.Element
 module.TextElement = module.Element:extend()
 
 ---@param text ccTweaked.cc.pretty.Doc.concat|ccTweaked.cc.pretty.Doc.text
+---@param alignemnt? lib.feather.petty.alignment
 ---@param config? lib.feather.lycantrophy.config
 ---@return lib.feather.lycantrophy.TextElement
-function module.TextElement:new(text, config)
+function module.TextElement:new(text, alignemnt, config)
 	local textElement = module.TextElement.super.new(self, config)
-
 	---@cast textElement lib.feather.lycantrophy.TextElement
 	textElement.text = text
+	textElement.alignment = alignemnt or "left"
 	setmetatable(textElement, module.TextElement) --[[@as lib.feather.lycantrophy.TextElement]]
-	textElement:onResize()
 	return textElement
 end
 
-function module.TextElement:onResize()
+---@param size? lib.feather.vec2d
+function module.TextElement:resize(size)
+	---@cast size lib.feather.vec2d
+	local maxSize = self.config.maxSize:min(size or vec.huge)
 	local text, height, width =
-		petty.wrap(self.text, self:getAvailableSpace().x)
-	self.wrapped = { text = text, size = vec.new(width, height) }
+		petty.wrap(self.text, maxSize.x)
+	if size then
+		self.size = size
+	else
+		self.size = vec.new(width, height)
+	end
+	print(width)
+	self.wrapped = petty.align(text, maxSize.x, self.alignment)
 end
 
 function module.TextElement:draw(pos)
-	local size = self.wrapped.size:max(self.config.minSize):min(self.config.maxSize)
-	module.TextElement.super.draw(self, pos, size)
-	petty.pp(self.wrapped.text, nil, self:getAvailableSpace().y)
+	local size = self:getSize()
+		:max(self.config.minSize)
+		:min(self.config.maxSize)
+	module.TextElement.super.draw(self, pos)
+	term.setCursorPos(pos.x, pos.y)
+	petty.pp(self.wrapped, nil, self.config.maxSize.y)
 end
 
 ---@alias lib.feather.lycantrophy.direction "horizontal"|"vertical"

@@ -55,7 +55,7 @@ function module.wrap(subject, maxWidth)
 					end
 					local spliceLength = math.min(maxWidth - takenWidth, #segment)
 					broken = broken .. breakingChar .. segment:sub(1, spliceLength)
-					takenWidth = takenWidth + #segment
+					takenWidth = takenWidth + spliceLength
 					longestLine = math.max(longestLine, takenWidth)
 					segment = segment:sub(spliceLength + 1)
 					breakingChar = "\n"
@@ -71,6 +71,42 @@ function module.wrap(subject, maxWidth)
 		end
 	end
 	return pretty.concat(table.unpack(doc)), lines, longestLine
+end
+
+---@alias lib.feather.petty.alignment "left"|"right"|"center"
+
+---@param obj ccTweaked.cc.pretty.Doc.concat
+---@param maxLength integer
+---@param alignment lib.feather.petty.alignment
+---@return ccTweaked.cc.pretty.Doc.concat
+function module.align(obj, maxLength, alignment)
+	if alignment == "left" then
+		return obj
+	end
+	assert(maxLength > 0)
+	local currLength = 0
+	---@type ccTweaked.cc.pretty.Doc.text?
+	local opener
+	local squashed = squash(obj)
+	for i, doc in ipairs(squashed) do
+		if doc.tag == "text" then
+			---@cast doc ccTweaked.cc.pretty.Doc.text
+			opener = opener or doc
+			currLength = currLength + #doc.text
+		end
+		if doc.tag == "line" or not squashed[i + 1] then
+			---@cast doc ccTweaked.cc.pretty.Doc.line
+			if opener and alignment == "center" then
+				opener.text = string.rep(" ", math.ceil((maxLength - currLength) / 2)) .. opener.text
+			elseif opener and alignment == "right" then
+				opener.text = string.rep(" ", maxLength - currLength) .. opener.text
+			end
+			opener = nil
+			currLength = 0
+		end
+	end
+
+	return obj
 end
 
 ---@param obj any The object to print

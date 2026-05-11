@@ -22,6 +22,9 @@ pretty = {}
 ---@field colour ccTweaked.colors.color
 
 
+---@class ccTweaked.cc.pretty.Doc.line: ccTweaked.cc.pretty.Doc
+---@field tag "line"
+
 ---@class ccTweaked.cc.pretty.Doc.concat: ccTweaked.cc.pretty.Doc
 ---@field tag "concat"
 
