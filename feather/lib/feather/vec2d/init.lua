@@ -12,6 +12,10 @@ function module.new(x, y)
 	return setmetatable({ x = x or 0, y = y or 0 }, module)
 end
 
+function module.newCCSquare(size)
+	return module.new(size, math.ceil(size * 0.66))
+end
+
 function module:clone()
 	return self.new(self.x, self.y)
 end
@@ -46,6 +50,27 @@ function module:__sub(target)
 	self = ensureVec(self)
 	target = ensureVec(target)
 	return module.new(self.x - target.x, self.y - target.y)
+end
+
+---@param target lib.feather.vec2d
+---@return lib.feather.vec2d
+function module:__mul(target)
+	self = ensureVec(self)
+	target = ensureVec(target)
+	return module.new(self.x * target.x, self.y * target.y)
+end
+
+---@param target lib.feather.vec2d
+---@return lib.feather.vec2d
+function module:__div(target)
+	self = ensureVec(self)
+	target = ensureVec(target)
+	return module.new(self.x / target.x, self.y / target.y)
+end
+
+---@param target lib.feather.vec2d
+function module:__eq(target)
+	return self.x == target.x and self.y == target.y
 end
 
 function module:__tostring()
