@@ -26,7 +26,7 @@ end
 ---@param size? lib.feather.vec2d
 ---@return lib.feather.vec2d size
 function Element:resize(size)
-	self.size = size or self.config.minSize
+	self.size = (size or vec.zero):max(self.config.minSize):min(self.config.maxSize)
 	return self.size
 end
 

@@ -8,9 +8,15 @@ local textObject = lycantrophy.TextElement:new(petty.concat(petty.text("Word,", 
 	petty.text(" Loooooooooooo"), petty.text("OOO", colors.red), petty.text("ooooooongWooord!")), "center", config)
 
 
-local frameObject = lycantrophy.FrameElement:new(1, colors.red, textObject, config)
+local frame = lycantrophy.FrameElement:new(1, colors.red, textObject, config)
+local group = lycantrophy.GroupElement:new("x", false, nil, frame, frame)
 
-frameObject:draw(vec.new(20, 5))
+--[[
+frame:draw(vec.new(20, 5))
+frame:draw(vec.new(40, 5))
+--]]
+group:resize(vec.new(20, 20))
+group:draw(vec.new(20, 5))
 term.setBackgroundColor(colors.black)
 term.setCursorPos(1, 20)
 term.clearLine()

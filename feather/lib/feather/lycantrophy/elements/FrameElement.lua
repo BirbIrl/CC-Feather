@@ -21,6 +21,7 @@ function FrameElement:new(thickness, color, child, config)
 	return setmetatable(frameElement, FrameElement) --[[@as lib.feather.lycantrophy.FrameElement]]
 end
 
+---@param size lib.feather.vec2d
 function FrameElement:resize(size)
 	if not self.child then
 		self.size = (vec.one * self.thickness * 2):max(self.config.minSize):min(self.config.maxSize)

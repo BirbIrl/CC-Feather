@@ -1,22 +1,87 @@
-local vec = bundl("feather.vec2d") ---@type lib.feather.vec2d
 local Element = bundl "feather.lycantrophy.elements.Element" ---@type lib.feather.lycantrophy.Element
----@alias lib.feather.lycantrophy.direction "horizontal"|"vertical"
+local vec = bundl("feather.vec2d") ---@type lib.feather.vec2d
+
+---@alias lib.feather.lycantrophy.axis "x"|"y"
+
+local flippedAxis = {
+	x = "y",
+	y = "x"
+}
 
 ---@class lib.feather.lycantrophy.GroupElement: lib.feather.lycantrophy.Element
 ---@field children lib.feather.lycantrophy.Element[]
----@field direction lib.feather.lycantrophy.direction
+---@field axis lib.feather.lycantrophy.axis
 ---@field super lib.feather.lycantrophy.Element
+---@field overflow boolean
+---@field visibleChildren? integer
 local GroupElement = Element:extend()
 
----@param direction? lib.feather.lycantrophy.direction
+---@param axis? lib.feather.lycantrophy.axis
+---@param overflow? boolean
 ---@param config? lib.feather.lycantrophy.config
 ---@param ... lib.feather.lycantrophy.Element
-function GroupElement:new(direction, config, ...)
+function GroupElement:new(axis, overflow, config, ...)
 	local groupElement = GroupElement.super.new(self, config)
 	---@cast groupElement lib.feather.lycantrophy.GroupElement
-	groupElement.direction = direction or "horizontal"
+	groupElement.axis = axis or "x"
 	groupElement.children = table.pack(...)
+	groupElement.overflow = overflow or false
+	groupElement.visibleChildren = 0
 	return setmetatable(groupElement, GroupElement) --[[@as lib.feather.lycantrophy.GroupElement]]
+end
+
+---@param size? lib.feather.vec2d
+---@return lib.feather.vec2d size
+function GroupElement:resize(size)
+	if size then
+		self.size = size
+	else
+		local preferred = vec.zero:clone()
+		for _, child in ipairs(self.children) do
+			local childSize = child:getSize()
+			preferred[self.axis] = preferred[self.axis] + childSize[self.axis]
+			preferred = preferred:max(childSize)
+		end
+		self.size = preferred
+	end
+	print(self.size)
+	self.super.resize(self, self.size)
+	local availableSpace = self.size[self.axis]
+	local limitingSpace = self.size[flippedAxis[self.axis]]
+
+	if self.overflow then
+		self.visibleChildren = #self.children
+		return self.size
+	end
+
+	self.visibleChildren = 0
+	for _, child in ipairs(self.children) do
+		local childSize = child:getSize()
+		availableSpace = availableSpace - childSize[self.axis]
+		if availableSpace >= 0 then
+			self.visibleChildren = self.visibleChildren + 1
+		end
+		local wantedLimitedSpace = childSize[flippedAxis[self.axis]]
+		assert(limitingSpace >= wantedLimitedSpace,
+			"Child in group element doesn't fit. The axis: " ..
+			flippedAxis[self.axis] ..
+			" has a limit of: " .. limitingSpace .. " but the child wants to take up: " .. wantedLimitedSpace)
+	end
+	return self.size
+end
+
+---@param pos lib.feather.vec2d
+function GroupElement:draw(pos)
+	GroupElement.super.draw(self, pos)
+	local offset = 0
+	for i = 1, self.visibleChildren, 1 do
+		local child          = self.children[i]
+		local childSize      = child:getSize()
+		local offsetPos      = pos:clone()
+		offsetPos[self.axis] = offsetPos[self.axis] + offset
+		child:draw(offsetPos)
+		offset = offset + childSize[self.axis]
+	end
 end
 
 return GroupElement
