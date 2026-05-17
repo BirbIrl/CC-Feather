@@ -1,4 +1,4 @@
-local pkgname = "object"
+local pkgname = "Object"
 local type = "lib"
 local ver = "unstable"
 local summary = "oop lib for computercraft"
