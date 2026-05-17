@@ -13,19 +13,22 @@ local flippedAxis = {
 ---@field axis lib.feather.lycantrophy.axis
 ---@field super lib.feather.lycantrophy.Element
 ---@field overflow boolean
+---@field backwards boolean
 ---@field visibleChildren? integer
 local GroupElement = Element:extend()
 
 ---@param axis? lib.feather.lycantrophy.axis
 ---@param overflow? boolean
+---@param backwards? boolean
 ---@param config? lib.feather.lycantrophy.config
 ---@param ... lib.feather.lycantrophy.Element
-function GroupElement:new(axis, overflow, config, ...)
+function GroupElement:new(axis, overflow, backwards, config, ...)
 	local groupElement = GroupElement.super.new(self, config)
 	---@cast groupElement lib.feather.lycantrophy.GroupElement
 	groupElement.axis = axis or "x"
 	groupElement.children = table.pack(...)
 	groupElement.overflow = overflow or false
+	groupElement.backwards = backwards or false
 	groupElement.visibleChildren = 0
 	return setmetatable(groupElement, GroupElement) --[[@as lib.feather.lycantrophy.GroupElement]]
 end
@@ -44,7 +47,6 @@ function GroupElement:resize(size)
 		end
 		self.size = preferred
 	end
-	print(self.size)
 	self.super.resize(self, self.size)
 	local availableSpace = self.size[self.axis]
 	local limitingSpace = self.size[flippedAxis[self.axis]]
@@ -73,14 +75,26 @@ end
 ---@param pos lib.feather.vec2d
 function GroupElement:draw(pos)
 	GroupElement.super.draw(self, pos)
+	local size = self:getSize()
 	local offset = 0
-	for i = 1, self.visibleChildren, 1 do
-		local child          = self.children[i]
-		local childSize      = child:getSize()
-		local offsetPos      = pos:clone()
-		offsetPos[self.axis] = offsetPos[self.axis] + offset
-		child:draw(offsetPos)
-		offset = offset + childSize[self.axis]
+	if self.backwards then
+		for i = self.visibleChildren, 1, -1 do
+			local child = self.children[i]
+			local childSize = child:getSize()
+			local offsetPos = pos:clone()
+			offsetPos[self.axis] = offsetPos[self.axis] + size[self.axis] - offset - childSize[self.axis]
+			child:draw(offsetPos)
+			offset = offset + childSize[self.axis]
+		end
+	else
+		for i = 1, self.visibleChildren, 1 do
+			local child = self.children[i]
+			local childSize = child:getSize()
+			local offsetPos = pos:clone()
+			offsetPos[self.axis] = offsetPos[self.axis] + offset
+			child:draw(offsetPos)
+			offset = offset + childSize[self.axis]
+		end
 	end
 end
 
