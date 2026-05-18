@@ -36,6 +36,10 @@ function module:max(target)
 	return module.new(math.max(self.x, target.x), math.max(self.y, target.y))
 end
 
+function module:contains(target)
+	return target.x >= 0 and target.y >= 0 and self.x >= target.x and self.y >= target.y
+end
+
 ---@param target lib.feather.vec2d
 ---@return lib.feather.vec2d
 function module:__add(target)

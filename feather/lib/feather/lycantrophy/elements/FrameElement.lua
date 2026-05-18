@@ -29,20 +29,26 @@ function FrameElement:resize(size)
 	end
 	local preferred = self.child:getSize()
 	local max = (size or self.config.maxSize) - self.thickness * 2
-	self.child:resize(max:min(preferred))
+	local target = max:min(preferred)
+	if preferred ~= target then
+		self.child:resize(max:min(preferred))
+	end
 	self.size = self.child:getSize() + self.thickness * 2
 	return self.size
 end
 
-function FrameElement:draw(pos)
-	FrameElement.super.draw(self, pos)
+---@param pos lib.feather.vec2d
+---@param backgroundColor? ccTweaked.colors.color
+function FrameElement:draw(pos, backgroundColor)
+	FrameElement.super.draw(self, pos, backgroundColor)
 	local size = self:getSize()
 	local to = pos + size - 1
 	for i = 0, self.thickness - 1, 1 do
-		paintutils.drawBox(pos.x + i, pos.y + i, to.x - i, to.y - i, self.color)
+		paintutils.drawBox(pos.x + i, pos.y + i, to.x - i, to.y - i,
+			self.color or backgroundColor or self.config.backgroundColor)
 	end
 	if self.child then
-		self.child:draw(pos + self.thickness)
+		self.child:draw(pos + self.thickness, backgroundColor)
 	end
 end
 

@@ -5,7 +5,9 @@ local defaultConfig = bundl("feather.lycantrophy.defaultConfig") ---@type lib.fe
 ---@field config lib.feather.lycantrophy.config
 ---@field size? lib.feather.vec2d
 ---@field super lib.feather.Object
+---@field pos? lib.feather.vec2d
 local Element = Object:extend()
+
 
 ---@param config? lib.feather.lycantrophy.config
 function Element:new(config)
@@ -16,11 +18,21 @@ function Element:new(config)
 end
 
 ---@param pos lib.feather.vec2d
-function Element:draw(pos)
+---@param backgroundColor? ccTweaked.colors.color
+function Element:draw(pos, backgroundColor)
+	backgroundColor = backgroundColor or self.config.backgroundColor
 	local to = pos + self:getSize() - vec.one
-	paintutils.drawFilledBox(pos.x, pos.y, to.x, to.y,
-		self.config.backgroundColor)
-	term.setBackgroundColor(self.config.backgroundColor)
+	if pos:max(to) ~= pos then
+		paintutils.drawFilledBox(pos.x, pos.y, to.x, to.y,
+			backgroundColor)
+	end
+	term.setBackgroundColor(backgroundColor)
+	self.pos = pos
+end
+
+function Element:redraw()
+	assert(self.pos, "First an element needs to be drawn before being redrawn")
+	self:draw(self.pos)
 end
 
 ---@param size? lib.feather.vec2d

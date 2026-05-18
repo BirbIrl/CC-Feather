@@ -73,8 +73,9 @@ function GroupElement:resize(size)
 end
 
 ---@param pos lib.feather.vec2d
-function GroupElement:draw(pos)
-	GroupElement.super.draw(self, pos)
+---@param backgroundColor? ccTweaked.colors.color
+function GroupElement:draw(pos, backgroundColor)
+	GroupElement.super.draw(self, pos, backgroundColor)
 	local size = self:getSize()
 	local offset = 0
 	if self.backwards then

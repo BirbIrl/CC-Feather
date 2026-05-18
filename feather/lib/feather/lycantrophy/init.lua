@@ -21,5 +21,9 @@ module.FrameElement = bundl("feather.lycantrophy.elements.FrameElement") ---@typ
 
 module.GroupElement = bundl("feather.lycantrophy.elements.GroupElement") ---@type lib.feather.lycantrophy.GroupElement
 
+module.SelectorElement = bundl("feather.lycantrophy.elements.SelectorElement") ---@type lib.feather.lycantrophy.SelectorElement
+
+module.RootElement = bundl("feather.lycantrophy.elements.RootElement") ---@type lib.feather.lycantrophy.RootElement
+
 
 return module

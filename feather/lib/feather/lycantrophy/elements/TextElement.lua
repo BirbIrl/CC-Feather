@@ -38,8 +38,10 @@ function TextElement:resize(size)
 	return self.size
 end
 
-function TextElement:draw(pos)
-	TextElement.super.draw(self, pos)
+---@param pos lib.feather.vec2d
+---@param backgroundColor? ccTweaked.colors.color
+function TextElement:draw(pos, backgroundColor)
+	TextElement.super.draw(self, pos, backgroundColor)
 	term.setCursorPos(pos.x, pos.y)
 	petty.pp(self.wrapped, nil, self:getSize().y)
 end
