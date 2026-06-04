@@ -11,8 +11,8 @@ module.processesByThread = {}
 module.processesByName = {}
 
 module.journal = {}
-local logPath = ".feather/share/featherd/logs/" .. os.date("%Y-%m-%d-%T"):gsub(":", ".") .. ".txt"
-local logfile = fs.open(logPath, "w")
+module.currentLogPath = ".feather/share/featherd/logs/" .. os.date("%Y-%m-%d-%T"):gsub(":", ".") .. ".txt"
+local logfile = fs.open(module.currentLogPath, "w")
 assert(logfile, "Couldn't open a file to save the log in")
 
 

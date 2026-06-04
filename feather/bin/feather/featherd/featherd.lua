@@ -20,8 +20,8 @@ local function help()
 	describeArg("listUnits", "lists all units")
 	describeArg("addUnit [name] [command] [onDeath?] [useShell?]", "adds a unit")
 	describeArg("delUnit [name]", "deletes a unit")
+	describeArg("log", "opens the current log file")
 	--describeArg("delLogs", "deletes all logs")
-	--describeArg("currLog", "opens the current log file")
 	--describeArg("lastLog", "opens last boot's log file")
 end
 
@@ -93,6 +93,8 @@ elseif mode == "delUnit" then
 		term.setTextColor(colors.red)
 		print("Couldn't find the unit")
 	end
+elseif mode == "log" then
+	shell.execute("mess", featherd.currentLogPath)
 else
 	help()
 end

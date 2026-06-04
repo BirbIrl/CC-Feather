@@ -3,16 +3,18 @@ local pretty = require("cc.pretty")
 local module = {}
 setmetatable(module, { __index = pretty })
 local docMt = getmetatable(module.empty)
+local ogDocMt = getmetatable(pretty.empty)
 module.nbsp = "\160"
 
+
 ---@param doc ccTweaked.cc.pretty.Doc
-local function squash(doc)
+function module.squash(doc)
 	if doc.tag ~= "concat" then
 		return { doc }
 	end
 	local elems = {}
 	for _, elem in ipairs(doc) do
-		for _, bit in ipairs(squash(elem)) do
+		for _, bit in ipairs(module.squash(elem)) do
 			elems[#elems + 1] = bit
 		end
 	end
@@ -31,7 +33,7 @@ function module.wrap(subject, maxWidth)
 	local takenWidth = 0
 	local lines = 1
 	local longestLine = 0
-	for _, text in ipairs(squash(subject)) do
+	for _, text in ipairs(module.squash(subject)) do
 		local broken = ""
 		if text.tag == "text" then
 			---@cast text ccTweaked.cc.pretty.Doc.text
@@ -73,6 +75,26 @@ function module.wrap(subject, maxWidth)
 	return pretty.concat(table.unpack(doc)), lines, longestLine
 end
 
+---@param doc ccTweaked.cc.pretty.Doc
+function module.getSize(doc)
+	local len = 0
+	local longestLine = 0
+	local lines = 0
+	for _, part in ipairs(module.squash(doc)) do
+		if part.tag == "line" then
+			len = 0
+			lines = lines + 1
+		elseif part.tag == "text" then
+			---@cast part ccTweaked.cc.pretty.Doc.text
+			len = len + #part.text
+			if len > longestLine then
+				longestLine = len
+			end
+		end
+	end
+	return longestLine, lines
+end
+
 ---@alias lib.feather.petty.alignment "left"|"right"|"center"
 
 ---@param obj ccTweaked.cc.pretty.Doc.concat
@@ -87,7 +109,7 @@ function module.align(obj, maxLength, alignment)
 	local currLength = 0
 	---@type ccTweaked.cc.pretty.Doc.text?
 	local opener
-	local squashed = squash(obj)
+	local squashed = module.squash(obj)
 	for i, doc in ipairs(squashed) do
 		if doc.tag == "text" then
 			---@cast doc ccTweaked.cc.pretty.Doc.text
@@ -109,30 +131,50 @@ function module.align(obj, maxLength, alignment)
 	return obj
 end
 
+---@param str string
+---@param color? ccTweaked.colors.color
+local function writeColored(str, color)
+	local c = term.getTextColor()
+	if color then
+		term.setTextColor(color)
+	end
+	term.write(str)
+	term.setTextColor(c)
+end
+
 ---@param obj any The object to print
 ---@param options? prettyOptions Options for how certain things are displayed
----@param maxSize? integer For docs, maximum number of newlines, for everything else, maximum fraction of the screen width that can be written to before wrapping. Defaults to 0.6
-function module.pp(obj, options, maxSize)
-	if getmetatable(obj) == docMt then
+---@param fromLine? integer For petty docs, maximum number of newlines
+---@param toLine? integer For petty docs, maximum number of newlines
+function module.pp(obj, options, fromLine, toLine)
+	fromLine = fromLine or 0
+	if getmetatable(obj) == docMt or getmetatable(obj) == ogDocMt then
 		---@cast obj ccTweaked.cc.pretty.Doc
-		if maxSize and obj.tag == "concat" then
+		if obj.tag == "concat" then
 			local lines = 1
 			local x, y  = term.getCursorPos()
-			for _, v in ipairs(squash(obj)) do
+			for _, v in ipairs(module.squash(obj)) do
 				---@cast v ccTweaked.cc.pretty.Doc
 				if v.tag == "line" then
-					term.setCursorPos(x, y + lines)
+					term.setCursorPos(x, y + lines - fromLine)
 					lines = lines + 1
+				elseif lines < fromLine then
+				elseif v.tag == "text" then
+					---@cast v ccTweaked.cc.pretty.Doc.text
+					writeColored(v.text, v.colour)
 				else
-					module.write(v)
+					module.write(v, math.huge)
+					assert(not fromLine,
+						"fromline doesn't work with non-text/newline characters. trying to handle type: " .. v
+						.tag)
 				end
-				if lines > maxSize then
+				if toLine and lines > toLine then
 					break
 				end
 			end
 		end
 	else
-		module.pretty_print(obj, options, maxSize)
+		module.pretty_print(obj, options)
 	end
 end
 

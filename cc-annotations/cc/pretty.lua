@@ -19,7 +19,7 @@ pretty = {}
 ---@class ccTweaked.cc.pretty.Doc.text: ccTweaked.cc.pretty.Doc
 ---@field tag "text"
 ---@field text string
----@field colour ccTweaked.colors.color
+---@field colour? ccTweaked.colors.color
 
 
 ---@class ccTweaked.cc.pretty.Doc.line: ccTweaked.cc.pretty.Doc
