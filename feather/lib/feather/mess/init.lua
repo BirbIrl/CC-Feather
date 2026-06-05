@@ -2,20 +2,15 @@
 local petty = bundl("feather.petty")
 ---@type lib.feather.vec2d
 local vec = bundl("feather.vec2d")
----@type feather.featherd
-local featherd = bundl("feather.featherd")
 ---@class lib.feather.mess
 local module = {}
--------------------------------------------------------------------------------------------xShift---------
 ---@param doc ccTweaked.cc.pretty.Doc.text
 ---@param yShift integer
 ---@param xShift integer
 ---@param maxLineCount? integer
 local function display(doc, xShift, yShift, maxLineCount)
-	term.clear()
 	term.setCursorPos(-xShift + 1, 1)
-	--write("Thing!")
-	petty.pp(doc, nil, yShift, yShift + maxLineCount)
+	petty.pp(doc, yShift, yShift + maxLineCount, true)
 end
 
 local binds = {
@@ -86,6 +81,7 @@ end
 
 function module.focus(doc)
 	---Todo, switch to vectors
+	term.clear()
 	local x, y = 0, 0
 	local termSizeX, termSizeY = term.getSize()
 	local workingSizeX, workingSizeY = termSizeX, termSizeY - 1

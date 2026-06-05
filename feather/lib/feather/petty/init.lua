@@ -143,39 +143,44 @@ local function writeColored(str, color)
 end
 
 ---@param obj any The object to print
----@param options? prettyOptions Options for how certain things are displayed
 ---@param fromLine? integer For petty docs, maximum number of newlines
 ---@param toLine? integer For petty docs, maximum number of newlines
-function module.pp(obj, options, fromLine, toLine)
+---@param clearLines? boolean Whether to clear each line before printing individually
+---@return integer height final height of the output
+function module.pp(obj, fromLine, toLine, clearLines)
 	fromLine = fromLine or 0
-	if getmetatable(obj) == docMt or getmetatable(obj) == ogDocMt then
-		---@cast obj ccTweaked.cc.pretty.Doc
-		if obj.tag == "concat" then
-			local lines = 1
-			local x, y  = term.getCursorPos()
-			for _, v in ipairs(module.squash(obj)) do
-				---@cast v ccTweaked.cc.pretty.Doc
-				if v.tag == "line" then
-					term.setCursorPos(x, y + lines - fromLine)
-					lines = lines + 1
-				elseif lines < fromLine then
-				elseif v.tag == "text" then
-					---@cast v ccTweaked.cc.pretty.Doc.text
-					writeColored(v.text, v.colour)
-				else
-					module.write(v, math.huge)
-					assert(not fromLine,
-						"fromline doesn't work with non-text/newline characters. trying to handle type: " .. v
-						.tag)
-				end
-				if toLine and lines > toLine then
-					break
-				end
-			end
-		end
-	else
-		module.pretty_print(obj, options)
+	assert(getmetatable(obj) == docMt or getmetatable(obj) == ogDocMt) -- given object must be a doc
+	---@cast obj ccTweaked.cc.pretty.Doc
+	assert(obj.tag == "concat")
+	local lines = 1
+	local x, y = term.getCursorPos()
+	local squashed = module.squash(obj)
+	if clearLines then
+		term.clearLine()
 	end
+	for _, v in ipairs(squashed) do
+		---@cast v ccTweaked.cc.pretty.Doc
+		if v.tag == "line" then
+			term.setCursorPos(x, y + lines - fromLine)
+			if clearLines then
+				term.clearLine()
+			end
+			lines = lines + 1
+		elseif lines < fromLine then
+		elseif v.tag == "text" then
+			---@cast v ccTweaked.cc.pretty.Doc.text
+			writeColored(v.text, v.colour)
+		else
+			module.write(v, math.huge)
+			assert(not fromLine,
+				"fromline doesn't work with non-text/newline characters. trying to handle type: " .. v
+				.tag)
+		end
+		if toLine and lines > toLine then
+			break
+		end
+	end
+	return lines
 end
 
 return module

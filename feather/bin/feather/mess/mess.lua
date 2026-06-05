@@ -17,7 +17,8 @@ local function help()
 	term.setTextColor(colors.white)
 	print(", a text file reader.")
 	describeArg("[fileName]", "opens the given file as text")
-	describeArg("w [fileName]", "wraps the text")
+	--TODO implement this
+	--describeArg("w [fileName]", "wraps the text")
 end
 
 local flags = {
