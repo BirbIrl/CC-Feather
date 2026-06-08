@@ -161,15 +161,18 @@ function module.pp(obj, fromLine, toLine, clearLines)
 	for _, v in ipairs(squashed) do
 		---@cast v ccTweaked.cc.pretty.Doc
 		if v.tag == "line" then
-			term.setCursorPos(x, y + lines - fromLine)
-			if clearLines then
-				term.clearLine()
+			if lines >= fromLine then
+				term.setCursorPos(x, y + lines - fromLine)
+				if clearLines then
+					term.clearLine()
+				end
 			end
 			lines = lines + 1
 		elseif lines < fromLine then
 		elseif v.tag == "text" then
 			---@cast v ccTweaked.cc.pretty.Doc.text
 			writeColored(v.text, v.colour)
+		elseif v.tag == "nil" then
 		else
 			module.write(v, math.huge)
 			assert(not fromLine,

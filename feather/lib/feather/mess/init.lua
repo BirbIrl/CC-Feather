@@ -1,3 +1,5 @@
+---@type feather.featherd
+local featherd = bundl "feather.featherd"
 ---@type lib.feather.petty
 local petty = bundl("feather.petty")
 ---@type lib.feather.vec2d
@@ -230,8 +232,10 @@ function module.focus(doc)
 			end
 		end
 		if #searchStr == 0 then
-			currSearchFocus = nil
-			refresh = true
+			if currSearchFocus then
+				currSearchFocus = nil
+				refresh = true
+			end
 		end
 
 		x = math.max(math.min(x, docSizeX - termSizeX + 1), 0)

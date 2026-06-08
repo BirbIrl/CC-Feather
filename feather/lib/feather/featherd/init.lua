@@ -1,4 +1,3 @@
-local pretty = require("cc.pretty")
 local exception = require("cc.internal.exception")
 ---@class feather.featherd
 local module = {}
@@ -16,7 +15,7 @@ local logfile = fs.open(module.currentLogPath, "w")
 assert(logfile, "Couldn't open a file to save the log in")
 
 
----@alias feather.featherd.journalEntry.level "error"|"warning"|"message"
+---@alias feather.featherd.journalEntry.level "error"|"warning"|"log"
 ---@alias featherd.featherd.process.onDeath "keep"|"restart"|"discard"
 ---
 ---@class feather.featherd.journalEntry
@@ -205,11 +204,8 @@ end
 
 ---@param entry feather.featherd.journalEntry
 local function journalEntryToPlainText(entry)
-	local concat = ">" .. entry.name .. " [" .. entry.pid .. "] "
-	if entry.level ~= "message" then
-		concat = concat .. "[" .. entry.level:upper() .. "] "
-	end
-	return concat .. tostring(entry.message)
+	return ">" ..
+		entry.name .. " [" .. entry.pid .. "] " .. "[" .. entry.level:upper() .. "] " .. tostring(entry.message)
 end
 
 ---@param message any
@@ -217,7 +213,9 @@ end
 ---@param pidOrThread? integer|thread
 ---@return nil
 function module.log(message, level, pidOrThread)
-	level = level or "message"
+	---@type lib.feather.petty
+	local petty = bundl("feather.petty")
+	level = level or "log"
 	pidOrThread = pidOrThread or coroutine.running()
 	local process
 	if type(pidOrThread) == "number" then
@@ -226,7 +224,7 @@ function module.log(message, level, pidOrThread)
 		process = module.processesByThread[pidOrThread]
 	end
 	if type(message) ~= "string" then
-		message = pretty.pretty(message)
+		message = petty.pretty(message)
 	end
 	---@type feather.featherd.journalEntry
 	local entry = {
@@ -239,6 +237,40 @@ function module.log(message, level, pidOrThread)
 
 	logfile.writeLine(journalEntryToPlainText(entry))
 	logfile.flush()
+end
+
+---@param logFilePath string
+---@return ccTweaked.cc.pretty.Doc.concat doc
+function module.formatLog(logFilePath)
+	---@type lib.feather.petty
+	local petty = bundl("feather.petty")
+	local logFile = fs.open(logFilePath, "r")
+	assert(logFile, "Couldn't open file")
+	local contents = petty.empty
+	while true do
+		local line = logFile.readLine()
+		if not line then break end
+		local progName, pid, severity, message =
+			line:match("%>(.*)%s%[(%d*)%]%s%[(.*)%]%s(.*)")
+
+		local severityColor = colors.white
+		if severity == "ERROR" then
+			severityColor = colors.red
+		elseif severity == "WARNING" then
+			severityColor = colors.yellow
+		end
+		contents = contents
+			.. petty.text(">", colors.yellow)
+			.. progName
+			.. " ["
+			.. petty.text(pid, colors.yellow)
+			.. "] ["
+			.. petty.text(severity, severityColor)
+			.. "] "
+			.. message
+			.. petty.space_line
+	end
+	return contents --[[@as ccTweaked.cc.pretty.Doc.concat]]
 end
 
 function module.getNewestByName(name)

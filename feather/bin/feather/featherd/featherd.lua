@@ -1,5 +1,6 @@
 local featherd = bundl "feather.featherd" ---@type feather.featherd
 local expect = require("cc.expect").expect
+local mess = bundl "feather.mess" ---@type lib.feather.mess
 local c = colors
 
 local function describeArg(argument, desc)
@@ -94,7 +95,7 @@ elseif mode == "delUnit" then
 		print("Couldn't find the unit")
 	end
 elseif mode == "log" then
-	shell.execute("mess", featherd.currentLogPath)
+	mess.focus(featherd.formatLog(featherd.currentLogPath))
 else
 	help()
 end
