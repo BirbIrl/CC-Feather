@@ -1,3 +1,4 @@
+--- TODO: handle empty log so it wont crash
 local exception = require("cc.internal.exception")
 ---@class feather.featherd
 local module = {}
@@ -16,7 +17,7 @@ assert(logfile, "Couldn't open a file to save the log in")
 
 
 ---@alias feather.featherd.journalEntry.level "error"|"warning"|"log"
----@alias featherd.featherd.process.onDeath "keep"|"restart"|"discard"
+---@alias feather.featherd.process.onDeath "keep"|"restart"|"discard"
 ---
 ---@class feather.featherd.journalEntry
 ---@field level feather.featherd.journalEntry.level
@@ -33,7 +34,7 @@ local nextPid = 1
 ---units use exclusive names always
 ---@class feather.featherd.unit
 ---@field command string
----@field onDeath featherd.featherd.process.onDeath?
+---@field onDeath feather.featherd.process.onDeath?
 ---@field useShell boolean?
 
 ---@type table<string,feather.featherd.unit>
@@ -42,28 +43,8 @@ module.units = settings.get("feather.featherd.units", {})
 --- initializes featherd in it's full. should only be called by featherOS startup
 function module.init()
 	assert(not module.locked, "featherd is already running!")
-	module.addProcess("mainShell", function()
-		shell.run("startup")
-		term.clear()
-		term.setCursorPos(1, 1)
-		term.setTextColor(colors.yellow)
-		print(feather.getVersion())
-		term.setTextColor(colors.white)
-		write("Computer ID: ")
-		term.setTextColor(colors.yellow)
-		write(tostring(os.getComputerID()))
-		local label = os.getComputerLabel()
-		if label then
-			term.setTextColor(colors.white)
-			write(' - "')
-			term.setTextColor(colors.yellow)
-			write(label)
-			term.setTextColor(colors.white)
-			write('"')
-		end
-		term.setCursorPos(-20, 2)
-		shell.run("shell")
-	end)
+	assert(not multishell, "bios.use_multishell must be set to false for featheros to work")
+	bundl "feather.mush".init()
 	module.loadUnits()
 	module.runProcesses()
 	os.shutdown()
@@ -77,7 +58,7 @@ end
 
 ---@param name string name of the unit you want to define
 ---@param command string command ran to start the unit
----@param onDeath featherd.featherd.process.onDeath thing to do when program dies/finishes
+---@param onDeath feather.featherd.process.onDeath thing to do when program dies/finishes
 ---@param useShell? boolean whether it should run with os.run or shell.run
 function module.addUnit(name, command, onDeath, useShell)
 	module.units[name] = { command = command, onDeath = onDeath or "keep", useShell = useShell }
@@ -98,6 +79,19 @@ function module.removeUnit(name)
 	return true
 end
 
+local inputEvents = {
+	key = true,
+	key_up = true,
+	char = true,
+	mouse_click = true,
+	mouse_drag = true,
+	mouse_scroll = true,
+	mouse_up = true,
+	paste = true,
+	file_transfer = true,
+}
+
+
 ---Cycles through featherd processes to run them. Should only ever be ran once, and never touched
 function module.runProcesses()
 	assert(not module.locked, "featherd is already running!")
@@ -110,9 +104,43 @@ function module.runProcesses()
 		end
 		---@type feather.featherd.process[]
 		local toRestart = {}
+		---@type ccTweaked.os.event
+		local eventType = event[1]
+		local lastWindow = term.current()
 		for pid, process in pairs(module.processesByPid) do
-			if coroutine.status(process.thread) ~= "dead" and process.filter == nil or process.filter == event[1] or process.filter == "terminate" then
+			if coroutine.status(process.thread) ~= "dead" and (process.filter == nil or process.filter == event[1] or event[1] == "terminate") then
+				local event = event
+				if inputEvents[eventType] and not process.captureInput then
+					goto continue
+				end
+				if process.window and process.window.getPosition and eventType and eventType:sub(1, 5) == "mouse" then
+					local windowX, windowY = process.window.getPosition()
+					event = {
+						event[1],
+						event[2],
+						event[3] - windowX + 1,
+						event[4] - windowY + 1,
+					}
+					module.log(event[3])
+					module.log(event[4])
+					if event[3] <= 0 or event[4] <= 0 then
+						goto continue
+					end
+				end
+				local last
+				if process.window then
+					last = term.redirect(process.window)
+				end
 				local ok, param = coroutine.resume(process.thread, table.unpack(event, 1, event.n))
+				if process.window and process.window.isVisible() then
+					lastWindow = process.window
+				end
+				if last then
+					term.redirect(last)
+				end
+				term.setCursorBlink(true)
+
+
 				if ok then
 					process.filter = param
 				elseif type(param) == "string" and exception and exception.can_wrap_errors and exception.can_wrap_errors() then
@@ -120,9 +148,7 @@ function module.runProcesses()
 				else
 					module.log(param, "error", pid)
 				end
-			end
-
-			if coroutine.status(process.thread) == "dead" then
+			elseif coroutine.status(process.thread) == "dead" then
 				if process.onDeath ~= "keep" then
 					module.processesByPid[pid] = nil
 					module.processesByThread[process.thread] = nil
@@ -137,11 +163,17 @@ function module.runProcesses()
 					toRestart[#toRestart + 1] = process
 				end
 			end
+			::continue::
 		end
 		for _, process in ipairs(toRestart) do
 			module.processesByName[process.name].locked = nil
 			module.addProcess(process.name, process.fun, process.onDeath)
 			os.queueEvent("feather.featherd.restarted", process)
+		end
+		if lastWindow then
+			local last = term.redirect(lastWindow)
+			lastWindow.restoreCursor()
+			term.redirect(last)
 		end
 		event = table.pack(os.pullEventRaw())
 	end
@@ -150,17 +182,22 @@ end
 ---@class feather.featherd.process
 ---@field startTime number
 ---@field name string
----@field filter string?
+---@field filter? string used by the coroutine loop to filter out the event the process generates. don't modify.
 ---@field thread thread
 ---@field fun function
 ---@field pid integer
----@field onDeath featherd.featherd.process.onDeath
+---@field window? Window
+---@field captureInput boolean
+---@field onDeath feather.featherd.process.onDeath
 
 ---@param name string name of the process
 ---@param fun function|thread|string function the process should run with, string the process should run as command or thread
----@param onDeath? featherd.featherd.process.onDeath what to do with the process once it ends
----@param exclusive? true when true, featherd wont allow making more than one living process under this name
-function module.addProcess(name, fun, onDeath, exclusive)
+---@param onDeath? feather.featherd.process.onDeath what to do with the process once it ends
+---@param exclusive? boolean when true, featherd wont allow making more than one living process under this name
+---@param window? Window if supplied, the window will be in focus whenever the window coroutine is running. mouse events are offset to match the window.
+---@param captureInput? boolean whether the program recieve input events
+---@return feather.featherd.process process
+function module.addProcess(name, fun, onDeath, exclusive, window, captureInput)
 	module.processesByName[name] = module.processesByName[name] or {}
 	if (exclusive and module.processesByName[name][1]) or module.processesByName[name].locked then
 		error("Cannot create another exclusive process, it's already taken")
@@ -175,6 +212,8 @@ function module.addProcess(name, fun, onDeath, exclusive)
 		name = name,
 		fun = fun,
 		exclusive = exclusive,
+		window = window,
+		captureInput = captureInput or false,
 		onDeath = onDeath or "discard"
 	}
 	if type(fun) == "function" then
@@ -200,6 +239,7 @@ function module.addProcess(name, fun, onDeath, exclusive)
 	module.processesByThread[process.thread] = process
 	table.insert(module.processesByName[name], process)
 	nextPid = nextPid + 1
+	return process
 end
 
 ---@param entry feather.featherd.journalEntry

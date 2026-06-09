@@ -5,7 +5,7 @@ local summary = "CLI for feather.lib.featherd"
 local detailed = [[
 A computercraft process manager for FeatherOS
 ]]
-local deps = { "lib.feather.featherd" }
+local deps = { "lib.feather.featherd", "lib.feather.mess" }
 
 local url = "github.com/birbirl/CC-Feather"
 local manifest = "feather"

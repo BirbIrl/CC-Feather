@@ -1,10 +1,10 @@
-local pkgname = "mess"
+local pkgname = "mush"
 local type = "lib"
 local ver = "unstable"
-local summary = "a messy implementation of less/more in CC"
+local summary = "A multishell for featherOS"
 local detailed =
 [[]]
-local deps = { "lib.feather.petty", "lib.feather.vec2d" }
+local deps = { "bin.feather.featherd", "lib.feather.windex", "lib.feather.tty", "lib.feather.vec2d" }
 
 local url = "github.com/birbirl/CC-Feather"
 local manifest = "feather"
