@@ -34,18 +34,23 @@ function shell.switchTab(id)
 	local process = featherd.processesByPid[pid]
 	assert(process, "couldn't find process under the given pid")
 	if currProcess then
-		currProcess.captureInput = false
+		currProcess.inputType = false
 		currProcess.window.setVisible(false)
 	end
 	currProcess = process
-	process.captureInput = true
+	process.inputType = true
 	process.window.setVisible(true)
 	currTab = id
-	featherd.blinkWindow = process.window
+end
+
+function module.disableMultishellCommands()
+	shell.setPath(shell.path():gsub(":/rom/programs/advanced", ""))
 end
 
 function module.init()
 	assert(not (featherd.processesByName["mush"] and featherd.processesByName["mush"][1]))
+	assert(not multishell, "bios.use_multishell must be set to false for featheros to work")
+	module.disableMultishellCommands()
 	featherd.addProcess("mush", function()
 		tty.setBackgroundColor(colors.gray)
 		tty.setTextColor(colors.black)
@@ -73,7 +78,7 @@ function module.init()
 				end
 			end
 		end
-	end, "keep", true, windex.create(term.current(), 1, 1, select(1, term.getSize()), 1, true), true
+	end, "keep", true, windex.create(term.current(), 1, 1, select(1, term.getSize()), 1, true), "silent"
 	)
 	shell.openTab("shell")
 	shell.openTab("shell")

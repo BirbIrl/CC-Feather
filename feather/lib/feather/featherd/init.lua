@@ -43,7 +43,6 @@ module.units = settings.get("feather.featherd.units", {})
 --- initializes featherd in it's full. should only be called by featherOS startup
 function module.init()
 	assert(not module.locked, "featherd is already running!")
-	assert(not multishell, "bios.use_multishell must be set to false for featheros to work")
 	bundl "feather.mush".init()
 	module.loadUnits()
 	module.runProcesses()
@@ -106,11 +105,17 @@ function module.runProcesses()
 		local toRestart = {}
 		---@type ccTweaked.os.event
 		local eventType = event[1]
-		local lastWindow = term.current()
 		for pid, process in pairs(module.processesByPid) do
+			local lastWindow
 			if coroutine.status(process.thread) ~= "dead" and (process.filter == nil or process.filter == event[1] or event[1] == "terminate") then
+				if process.window then
+					lastWindow = term.redirect(process.window)
+					if process.window.isVisible() and process.inputType == true then
+						process.window.restoreCursor()
+					end
+				end
 				local event = event
-				if inputEvents[eventType] and not process.captureInput then
+				if inputEvents[eventType] and not process.inputType then
 					goto continue
 				end
 				if process.window and process.window.getPosition and eventType and eventType:sub(1, 5) == "mouse" then
@@ -127,18 +132,7 @@ function module.runProcesses()
 						goto continue
 					end
 				end
-				local last
-				if process.window then
-					last = term.redirect(process.window)
-				end
 				local ok, param = coroutine.resume(process.thread, table.unpack(event, 1, event.n))
-				if process.window and process.window.isVisible() then
-					lastWindow = process.window
-				end
-				if last then
-					term.redirect(last)
-				end
-				term.setCursorBlink(true)
 
 
 				if ok then
@@ -163,17 +157,15 @@ function module.runProcesses()
 					toRestart[#toRestart + 1] = process
 				end
 			end
+			if lastWindow then
+				term.redirect(lastWindow)
+			end
 			::continue::
 		end
 		for _, process in ipairs(toRestart) do
 			module.processesByName[process.name].locked = nil
 			module.addProcess(process.name, process.fun, process.onDeath)
 			os.queueEvent("feather.featherd.restarted", process)
-		end
-		if lastWindow then
-			local last = term.redirect(lastWindow)
-			lastWindow.restoreCursor()
-			term.redirect(last)
 		end
 		event = table.pack(os.pullEventRaw())
 	end
@@ -187,7 +179,7 @@ end
 ---@field fun function
 ---@field pid integer
 ---@field window? Window
----@field captureInput boolean
+---@field inputType "silent"|boolean
 ---@field onDeath feather.featherd.process.onDeath
 
 ---@param name string name of the process
@@ -195,9 +187,9 @@ end
 ---@param onDeath? feather.featherd.process.onDeath what to do with the process once it ends
 ---@param exclusive? boolean when true, featherd wont allow making more than one living process under this name
 ---@param window? Window if supplied, the window will be in focus whenever the window coroutine is running. mouse events are offset to match the window.
----@param captureInput? boolean whether the program recieve input events
+---@param inputType? "silent"|boolean whether the process should read inputs. silent will disable the cursor blink for it's window
 ---@return feather.featherd.process process
-function module.addProcess(name, fun, onDeath, exclusive, window, captureInput)
+function module.addProcess(name, fun, onDeath, exclusive, window, inputType)
 	module.processesByName[name] = module.processesByName[name] or {}
 	if (exclusive and module.processesByName[name][1]) or module.processesByName[name].locked then
 		error("Cannot create another exclusive process, it's already taken")
@@ -213,7 +205,7 @@ function module.addProcess(name, fun, onDeath, exclusive, window, captureInput)
 		fun = fun,
 		exclusive = exclusive,
 		window = window,
-		captureInput = captureInput or false,
+		inputType = inputType or false,
 		onDeath = onDeath or "discard"
 	}
 	if type(fun) == "function" then
