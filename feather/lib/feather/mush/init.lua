@@ -17,11 +17,13 @@ local currProcess = nil
 
 function shell.openTab(...)
 	local args = table.pack(...)
+	local prev = term.redirect(term.native())
 	local size = tty.getSize()
 	local proc = featherd.addProcess("mush_tab", function()
 		shell.run(table.unpack(args))
-	end, "discard", false, windex.create(term.native(), 1, 2, size.x, size.y - 1, false))
-	tabs[#tabs + 1] = proc.pid
+	end, "discard", false, windex.create(term.current(), 1, 2, size.x, size.y - 1, false))
+	table.insert(tabs, (currTab or 0) + 1, proc.pid)
+	term.redirect(prev)
 	return proc.pid
 end
 
@@ -52,11 +54,27 @@ function module.init()
 	assert(not multishell, "bios.use_multishell must be set to false for featheros to work")
 	module.disableMultishellCommands()
 	featherd.addProcess("mush", function()
+		local ctrlHeld = false
+		local shiftHeld = false
 		tty.setBackgroundColor(colors.gray)
 		tty.setTextColor(colors.black)
 		while true do
 			tty.clear()
 			tty.setCursorPos(vec.one)
+			for i = #tabs, 1, -1 do
+				if coroutine.status(featherd.processesByPid[tabs[i]].thread) == "dead" then
+					table.remove(tabs, i)
+					if i == currTab then
+						shell.switchTab(i)
+					end
+				end
+			end
+			if #tabs == 0 then
+				os.reboot()
+			end
+			if currTab > #tabs then
+				shell.switchTab(#tabs)
+			end
 			for i, _ in ipairs(tabs) do
 				if i == currTab then
 					tty.push()
@@ -76,11 +94,33 @@ function module.init()
 						shell.switchTab(target)
 					end
 				end
+			elseif eventName == "key" then
+				if e1 == keys.leftCtrl or e1 == keys.rightCtrl then
+					ctrlHeld = true
+				elseif e1 == keys.leftShift or e1 == keys.rightShift then
+					shiftHeld = true
+				elseif e1 == keys.t and ctrlHeld then
+					shell.openTab("shell")
+					shell.switchTab(currTab + 1)
+				elseif e1 == keys.w and ctrlHeld then
+					featherd.killProcess(featherd.getProcess(tabs[currTab]))
+				elseif e1 == keys.tab and ctrlHeld and shiftHeld then
+					shell.switchTab((currTab - 2) % #tabs + 1)
+				elseif e1 == keys.tab and ctrlHeld then
+					shell.switchTab(currTab % #tabs + 1)
+				elseif e1 > 1 and e1 < 11 and ctrlHeld then
+					shell.switchTab(e1 - 1)
+				end
+			elseif eventName == "key_up" then
+				if e1 == keys.leftCtrl or e1 == keys.rightCtrl then
+					ctrlHeld = false
+				elseif e1 == keys.leftShift or e1 == keys.rightShift then
+					shiftHeld = false
+				end
 			end
 		end
 	end, "keep", true, windex.create(term.current(), 1, 1, select(1, term.getSize()), 1, true), "silent"
 	)
-	shell.openTab("shell")
 	shell.openTab("shell")
 	shell.switchTab(#tabs)
 end

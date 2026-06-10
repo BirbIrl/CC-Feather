@@ -11,6 +11,7 @@ module.processesByThread = {}
 module.processesByName = {}
 
 module.journal = {}
+---@diagnostic disable-next-line
 module.currentLogPath = ".feather/share/featherd/logs/" .. os.date("%Y-%m-%d-%T"):gsub(":", ".") .. ".txt"
 local logfile = fs.open(module.currentLogPath, "w")
 assert(logfile, "Couldn't open a file to save the log in")
@@ -114,25 +115,26 @@ function module.runProcesses()
 						process.window.restoreCursor()
 					end
 				end
-				local event = event
+				local tweakedEvent = event
 				if inputEvents[eventType] and not process.inputType then
 					goto continue
 				end
 				if process.window and process.window.getPosition and eventType and eventType:sub(1, 5) == "mouse" then
 					local windowX, windowY = process.window.getPosition()
-					event = {
+					tweakedEvent = {
 						event[1],
 						event[2],
 						event[3] - windowX + 1,
 						event[4] - windowY + 1,
 					}
-					module.log(event[3])
-					module.log(event[4])
-					if event[3] <= 0 or event[4] <= 0 then
+					if tweakedEvent[3] <= 0 or tweakedEvent[4] <= 0 then
 						goto continue
 					end
 				end
-				local ok, param = coroutine.resume(process.thread, table.unpack(event, 1, event.n))
+				local ok, param = coroutine.resume(process.thread, table.unpack(tweakedEvent, 1, tweakedEvent.n))
+				if process.window ~= term.current() then
+					process.window = term.current()
+				end
 
 
 				if ok then
@@ -178,7 +180,7 @@ end
 ---@field thread thread
 ---@field fun function
 ---@field pid integer
----@field window? Window
+---@field window? Window|ccTweaked.term.Redirect
 ---@field inputType "silent"|boolean
 ---@field onDeath feather.featherd.process.onDeath
 
@@ -232,6 +234,25 @@ function module.addProcess(name, fun, onDeath, exclusive, window, inputType)
 	table.insert(module.processesByName[name], process)
 	nextPid = nextPid + 1
 	return process
+end
+
+---@param identifyingFactor feather.featherd.process|integer|string|thread
+function module.getProcess(identifyingFactor)
+	if type(identifyingFactor) == "thread" then
+		return module.processesByThread[identifyingFactor]
+	elseif type(identifyingFactor) == "table" then
+		return identifyingFactor
+	elseif type(identifyingFactor) == "string" then
+		return module.getNewestByName(identifyingFactor)
+	elseif type(identifyingFactor) == "number" then
+		return module.processesByPid[identifyingFactor]
+	end
+	assert(identifyingFactor, "couldn't match pid for argument: " .. identifyingFactor)
+end
+
+---@param process feather.featherd.process
+function module.killProcess(process)
+	coroutine.resume(process.thread, "terminate")
 end
 
 ---@param entry feather.featherd.journalEntry
