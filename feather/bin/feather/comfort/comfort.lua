@@ -57,7 +57,7 @@ end
 
 local function makeFullScreenWindow()
 	local width, height = term.getSize()
-	return window.create(term.native(), 1, 1, width, height, true)
+	return window.create(term.current(), 1, 1, width, height, true)
 end
 
 

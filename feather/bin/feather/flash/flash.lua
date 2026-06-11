@@ -10,8 +10,11 @@ local function help()
 	term.setTextColor(colors.yellow)
 	write("Flash")
 	term.setTextColor(colors.white)
-	print(", installs FeatherOS onto another machine.")
+	print(" installs FeatherOS onto another machine.")
+	describeArg("", "installs featheros to computer or disk in drive")
 	describeArg("force", "doesn't prompt to confirm")
+	describeArg("[path]", "installs featheros to given path")
+	describeArg("[path] force", "doesn't prompt to confirm")
 end
 
 local function deserialiseFile(path)
@@ -24,9 +27,9 @@ local function deserialiseFile(path)
 	return result
 end
 
----@param drive ccTweaked.peripheral.Drive
-local function install(drive)
-	local mountPath = assert(drive.getMountPath())
+---@param path string
+local function install(path)
+	local mountPath = assert(path)
 	local mirrorID = settings.get("feather.bundle.mirrorID", os.getComputerID())
 	local paths = {
 		".feather/bin/feather/featherOS",
@@ -34,6 +37,11 @@ local function install(drive)
 		".feather/lib/feather/bundle",
 		".feather/lib/feather/featherd",
 		".feather/bin/feather/featherd",
+		".feather/lib/feather/windex",
+		".feather/lib/feather/tty",
+		".feather/lib/feather/vec2d",
+		".feather/lib/feather/mush",
+		".feather/bin/feather/mush",
 		".feather/lib/feather/storage"
 	}
 	for _, path in ipairs(paths) do
@@ -48,25 +56,39 @@ local function install(drive)
 	local settingsFilePath = fs.combine(mountPath, ".settings")
 	local settings = deserialiseFile(settingsFilePath)
 	settings["feather.bundle.mirrorID"] = mirrorID
+	settings["bios.use_multishell"] = false
 	local settingsFile = assert(fs.open(settingsFilePath, "w"), "couldn't open file")
 	settingsFile.write(textutils.serialise(settings))
 	settingsFile.close()
 end
 
+help()
+
 local force = ... == "force"
+if select(2, ...) then
+	force = select(2, ...) == force
+end
 
 
 ---@type ccTweaked.peripheral.Drive[]
 local drives = table.pack(peripheral.find("drive"))
-assert(#drives == 1, "There must be exactly one disk drive connected. Found " .. #drives)
+local path = ...
+if drives[1] then
+	assert(#drives == 1, "There must be exactly one disk drive connected or a path provided. Found " .. #drives)
+	if not path then
+		path = drives[1].getMountPath()
+	end
+end
+assert(path, "Path must be provided")
+
+assert(fs.exists(path), "Given path doesn't exist: " .. path)
 
 if force then
-	install(drives[1])
+	install(path)
 	return
 end
-help()
 print()
-print("Do you wish to install FeatherOS to the attached computer? Y/n")
+print("Do you wish to install FeatherOS at /" .. path .. " ? Y/n")
 repeat
 	local _, result = os.pullEvent("key")
 	sleep(0.05)
@@ -74,4 +96,4 @@ repeat
 		return
 	end
 until result == keys.y or result == keys.enter
-install(drives[1])
+install(path)

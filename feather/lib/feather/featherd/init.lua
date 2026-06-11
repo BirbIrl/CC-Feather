@@ -1,4 +1,5 @@
 --- TODO: handle empty log so it wont crash
+--- TODO: handle comfort screens so it doesn't drop it
 local exception = require("cc.internal.exception")
 ---@class feather.featherd
 local module = {}
@@ -132,7 +133,7 @@ function module.runProcesses()
 					end
 				end
 				local ok, param = coroutine.resume(process.thread, table.unpack(tweakedEvent, 1, tweakedEvent.n))
-				if process.window ~= term.current() then
+				if process.window and process.window ~= term.current() then
 					process.window = term.current()
 				end
 
