@@ -109,7 +109,11 @@ function module.runProcesses()
 		local eventType = event[1]
 		for pid, process in pairs(module.processesByPid) do
 			local lastWindow
-			if coroutine.status(process.thread) ~= "dead" and (process.filter == nil or process.filter == event[1] or event[1] == "terminate") then
+			local status = coroutine.status(process.thread)
+			if status ~= "dead" and (process.filter == nil or process.filter == eventType) then
+				if eventType == "terminate" and process.inputType ~= true then
+					goto continue
+				end
 				if process.window then
 					lastWindow = term.redirect(process.window)
 					if process.window.isVisible() and process.inputType == true then
@@ -190,7 +194,7 @@ end
 ---@param onDeath? feather.featherd.process.onDeath what to do with the process once it ends
 ---@param exclusive? boolean when true, featherd wont allow making more than one living process under this name
 ---@param window? Window if supplied, the window will be in focus whenever the window coroutine is running. mouse events are offset to match the window.
----@param inputType? "silent"|boolean whether the process should read inputs. silent will disable the cursor blink for it's window
+---@param inputType? "silent"|boolean whether the process should read inputs. silent will disable the cursor blink for it's window and ignores terminate events
 ---@return feather.featherd.process process
 function module.addProcess(name, fun, onDeath, exclusive, window, inputType)
 	module.processesByName[name] = module.processesByName[name] or {}

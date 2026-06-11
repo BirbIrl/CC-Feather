@@ -23,7 +23,7 @@ end
 
 local function install(pkgName)
 	print("Fetching " .. pkgName)
-	assert(bundle.install(pkgName), "Couldn't install " .. pkgName .. ", the mirror might be down.") --TODO: log this stuff properly
+	assert(bundle.install(pkgName), "Couldn't install " .. pkgName .. ", the mirror might be down.")
 	local spec = bundle.get(pkgName)
 	assert(spec, "somehow, we installed the package successfuly but can't find it. This shouldn't ever happen!")
 	print(pkgName .. " successfully installed")

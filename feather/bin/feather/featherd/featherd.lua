@@ -38,7 +38,7 @@ if mode == "list" then
 		if status == "dead" then
 			term.setTextColor(c.red)
 			print("Dead")
-		elseif status == "normal" then
+		elseif status == "normal" or status == "running" then
 			term.setTextColor(c.green)
 			print("Running")
 		else

@@ -2,12 +2,13 @@ local storage = bundl "feather.storage" ---@type feather.storage
 local featherd = bundl "feather.featherd" ---@type feather.featherd
 
 peripheral.find("modem", rednet.open)
---TODO: in featherd this doesn't log it outward, just prints to stdout
 assert(rednet.isOpen(), "Must have connected modem")
 local protocol = "feather.mirrord"
 rednet.host(protocol, os.getComputerLabel() or "unlabelled")
 
 ---@alias feather.mirrord.message.id number
+
+--TODO: make a modem message library
 
 ---@class feather.mirrord.message
 ---@field time number -- obtained from os.time("local")
@@ -25,12 +26,32 @@ rednet.host(protocol, os.getComputerLabel() or "unlabelled")
 ---@field request_type "bundlePost"
 ---@field contents {packageName: string, entry: feather.storage.entryStruct}
 ---@field respondsTo feather.mirrord.message.id
+---
+---@class feather.mirrord.message.bundle.failToFind: feather.mirrord.message
+---@field request_type "bundleFailToFind"
+---@field respondsTo feather.mirrord.message.id
 
 
 ---@param sender number
 ---@param message feather.mirrord.message.bundle.get
 local function handleRequest(sender, message)
 	local contents = message.contents
+	local pkgPath = contents.packageName:gsub('%.', "/")
+	local path = fs.combine(feather.installPath(), pkgPath)
+	if not fs.exists(path) then
+		---@type feather.mirrord.message.bundle.failToFind
+		local answer = {
+			request_type = "bundleFailToFind",
+			time = os.time("local"),
+			id = math.random(),
+			respondsTo = message.id,
+			contents = {},
+		}
+		rednet.send(sender, answer)
+		return false
+	end
+
+	local struct = storage.encode(path)
 	---@type feather.mirrord.message.bundle.post
 	local answer = {
 		request_type = "bundlePost",
@@ -39,12 +60,11 @@ local function handleRequest(sender, message)
 		respondsTo = message.id,
 		contents = {
 			packageName = contents.packageName,
+			entry = struct,
 		}
 	}
-	local path = contents.packageName:gsub('%.', "/")
-	local struct = storage.encode(fs.combine(feather.installPath(), path))
-	answer.contents.entry = struct
 	rednet.send(sender, answer, protocol)
+	return true
 end
 
 
@@ -52,10 +72,15 @@ end
 
 featherd.log("Initiating mirrord")
 while true do
+	---@type integer, feather.mirrord.message.bundle.post
 	local sender, message = rednet.receive(protocol) ---@diagnostic disable-line
 	assert(sender and type(message) == "table")
 	if message.request_type == "bundleGet" then
-		featherd.log(message)
-		handleRequest(sender, message --[[@as feather.mirrord.message.bundle.get]])
+		if handleRequest(sender, message --[[@as feather.mirrord.message.bundle.get]]) then
+			featherd.log("Sent " .. message.contents.packageName .. " to computer with id=" .. sender)
+		else
+			featherd.log("Failed to find request package " ..
+				message.contents.packageName .. " for computer with id=" .. sender)
+		end
 	end
 end

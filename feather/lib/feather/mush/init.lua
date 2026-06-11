@@ -15,6 +15,8 @@ local currTab = nil
 ---@type feather.featherd.process
 local currProcess = nil
 
+local lastTpress = os.clock()
+
 function shell.openTab(...)
 	local args = table.pack(...)
 	local prev = term.redirect(term.native())
@@ -99,9 +101,6 @@ function module.init()
 					ctrlHeld = true
 				elseif e1 == keys.leftShift or e1 == keys.rightShift then
 					shiftHeld = true
-				elseif e1 == keys.t and ctrlHeld then
-					shell.openTab("shell")
-					shell.switchTab(currTab + 1)
 				elseif e1 == keys.w and ctrlHeld then
 					featherd.killProcess(featherd.getProcess(tabs[currTab]))
 				elseif e1 == keys.tab and ctrlHeld and shiftHeld then
@@ -110,10 +109,15 @@ function module.init()
 					shell.switchTab(currTab % #tabs + 1)
 				elseif e1 > 1 and e1 < 11 and ctrlHeld then
 					shell.switchTab(e1 - 1)
+				elseif e1 == keys.t then
+					lastTpress = os.clock()
 				end
 			elseif eventName == "key_up" then
 				if e1 == keys.leftCtrl or e1 == keys.rightCtrl then
 					ctrlHeld = false
+				elseif e1 == keys.t and lastTpress + 0.25 > os.clock() and ctrlHeld then
+					shell.openTab("shell")
+					shell.switchTab(currTab + 1)
 				elseif e1 == keys.leftShift or e1 == keys.rightShift then
 					shiftHeld = false
 				end

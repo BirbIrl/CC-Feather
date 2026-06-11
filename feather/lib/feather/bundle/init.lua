@@ -108,12 +108,15 @@ function module.install(pkgName)
 	rednet.send(getMirrorID(), request, protocol)
 	local id, message
 	repeat
-		---@type number?, feather.mirrord.message.bundle.post
-		id, message = rednet.receive(protocol, 1) ---@diagnostic disable-line: assign-type-mismatch
+		---@type number?, feather.mirrord.message.bundle.post|feather.mirrord.message.bundle.failToFind
+		id, message = rednet.receive(protocol, 1)
 		if not id then
 			return false
 		end
 	until id == getMirrorID() and message and message.respondsTo == request.id
+	if message.request_type == "bundleFailToFind" then
+		error("Couldn't find package in path: " .. pkgName)
+	end
 	storage.decode(message.contents.entry)
 	feather.updatePath()
 	return true
