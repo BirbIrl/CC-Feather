@@ -47,7 +47,7 @@ local function handleRequest(sender, message)
 			respondsTo = message.id,
 			contents = {},
 		}
-		rednet.send(sender, answer)
+		rednet.send(sender, answer, protocol)
 		return false
 	end
 
