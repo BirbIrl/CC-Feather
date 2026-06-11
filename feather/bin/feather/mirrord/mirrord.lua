@@ -1,5 +1,6 @@
 local storage = bundl "feather.storage" ---@type feather.storage
 local featherd = bundl "feather.featherd" ---@type feather.featherd
+local bundle = bundl "feather.bundle" ---@type feather.bundle
 
 peripheral.find("modem", rednet.open)
 assert(rednet.isOpen(), "Must have connected modem")
@@ -30,11 +31,21 @@ rednet.host(protocol, os.getComputerLabel() or "unlabelled")
 ---@class feather.mirrord.message.bundle.failToFind: feather.mirrord.message
 ---@field request_type "bundleFailToFind"
 ---@field respondsTo feather.mirrord.message.id
+---
+---@class feather.mirrord.message.bundle.list.get: feather.mirrord.message
+---@field request_type "bundleListGet"
+---@field contents {}
+---@field respondsTo nil
+
+---@class feather.mirrord.message.bundle.list.post: feather.mirrord.message
+---@field request_type "bundleListPost"
+---@field contents {packages: feather.bundle.packageTable}
+---@field respondsTo feather.mirrord.message.id
 
 
 ---@param sender number
 ---@param message feather.mirrord.message.bundle.get
-local function handleRequest(sender, message)
+local function handleGet(sender, message)
 	local contents = message.contents
 	local pkgPath = contents.packageName:gsub('%.', "/")
 	local path = fs.combine(feather.installPath(), pkgPath)
@@ -67,6 +78,20 @@ local function handleRequest(sender, message)
 	return true
 end
 
+---@param sender number
+---@param message feather.mirrord.message.bundle.list.get
+local function handleListGet(sender, message)
+	---@type feather.mirrord.message.bundle.list.post
+	local answer = {
+		request_type = "bundleListPost",
+		contents = bundle.listInstalled(),
+		time = os.time("local"),
+		id = math.random(),
+		respondsTo = message.id
+	}
+	rednet.send(sender, answer, protocol)
+end
+
 
 
 
@@ -76,11 +101,13 @@ while true do
 	local sender, message = rednet.receive(protocol) ---@diagnostic disable-line
 	assert(sender and type(message) == "table")
 	if message.request_type == "bundleGet" then
-		if handleRequest(sender, message --[[@as feather.mirrord.message.bundle.get]]) then
+		if handleGet(sender, message --[[@as feather.mirrord.message.bundle.get]]) then
 			featherd.log("Sent " .. message.contents.packageName .. " to computer with id=" .. sender)
 		else
 			featherd.log("Failed to find request package " ..
 				message.contents.packageName .. " for computer with id=" .. sender)
 		end
+	elseif message.request_type == "bundleListGet" then
+		handleListGet(sender, message --[[@as feather.mirrord.message.bundle.list.get]])
 	end
 end

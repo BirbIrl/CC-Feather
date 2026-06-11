@@ -29,6 +29,7 @@ local function getMirrorID()
 	local mirrorID = settings.get("feather.bundle.mirrorID")
 	assert(mirrorID,
 		"ID of the mirror computer must be set, use \"set feather.bundle.mirrorID [mirror computer id]\" first.")
+	assert(mirrorID ~= os.getComputerID(), "mirror id equals this computer's id. Aborting.")
 	return mirrorID
 end
 
@@ -50,19 +51,23 @@ end
 
 
 ---@param rockspec feather.bundle.rockspec
----@return table<string, true> -- names of missing dependencies
-function module.listMissingDependencies(rockspec)
+---@return table<string, true>, table<string, true>
+function module.listIncompleteDependencies(rockspec)
 	local missing = {}
+	local needsUpdate = {}
 	if not next(rockspec.dependencies) then
-		return missing
+		return missing, needsUpdate
 	end
-	local list = module.listInstalled()
-	for _, dependency in pairs(rockspec.dependencies) do
-		if not list[dependency] then
-			missing[dependency] = true
+	local installed = module.listInstalled()
+	local available = module.listAvailable()
+	for _, dependencyName in pairs(rockspec.dependencies) do
+		if not installed[dependencyName] then
+			missing[dependencyName] = true
+		elseif rockspec.version == "unstable" or available[dependencyName].version == "unstable" then
+			needsUpdate[dependencyName] = true
 		end
 	end
-	return missing
+	return missing, needsUpdate
 end
 
 ---@return feather.bundle.packageTable
@@ -82,6 +87,27 @@ function module.listInstalled()
 		end
 	end
 	return packages
+end
+
+---@return feather.bundle.packageTable
+function module.listAvailable()
+	peripheral.find("modem", rednet.open)
+	assert(rednet.isOpen(), "Must have connected modem")
+	---@type feather.mirrord.message.bundle.list.get
+	local request = {
+		request_type = "bundleListGet",
+		id = math.random(),
+		time = os.time("local"),
+		contents = {}
+	}
+	rednet.send(getMirrorID(), request, protocol)
+	local id, message
+	repeat
+		---@type number?, feather.mirrord.message.bundle.list.post
+		id, message = rednet.receive(protocol, 1)
+		assert(id, "Couldn't list packages, the mirror might be down.")
+	until id == getMirrorID() and message and message.respondsTo == request.id
+	return message.contents
 end
 
 ---@param pkgName string
@@ -110,9 +136,7 @@ function module.install(pkgName)
 	repeat
 		---@type number?, feather.mirrord.message.bundle.post|feather.mirrord.message.bundle.failToFind
 		id, message = rednet.receive(protocol, 1)
-		if not id then
-			return false
-		end
+		assert(id, "Couldn't install " .. pkgName .. ", the mirror might be down.")
 	until id == getMirrorID() and message and message.respondsTo == request.id
 	if message.request_type == "bundleFailToFind" then
 		error("Couldn't find package in path: " .. pkgName)
