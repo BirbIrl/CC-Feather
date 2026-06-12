@@ -3,6 +3,8 @@ local featherd = bundl "feather.featherd" ---@type feather.featherd
 local module = {}
 
 ---todo: register to help menu as well
+---todo: flags only work on the first one
+---todo: flags shouldn't show up for flags that were already filled
 
 --[[
 --library that would let you register arguments like this:
@@ -231,13 +233,14 @@ function module.complete(spec, current, previous)
 	local completions = {}
 	local endsValid = false
 	for i, arg in ipairs(args) do
-		completions = {}
 		local done = false
 		local flag = getFlag(arg, currBranch)
 		if flag then
 			currArg.flags[flag] = true
 			goto continue
 		end
+		completions = {} -- the flow is all fucked up with this, i need to rethink all of this
+		-- maybe i should just do this recursively? is there any state i need to keep track of?
 
 		local nextBranches = arrayIfSingle(currBranch.next)
 
@@ -263,7 +266,6 @@ function module.complete(spec, current, previous)
 		end
 
 		if currBranch.flags and next(currBranch.flags) then
-			featherd.log(arg)
 			if arg == "" then
 				completions[#completions + 1] = "-" --TODO don't show if no new flags left to do
 			elseif currArg.argument == "-" then
