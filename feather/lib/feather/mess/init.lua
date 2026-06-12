@@ -1,3 +1,4 @@
+--TODO: support relative path
 ---@type feather.featherd
 local featherd = bundl "feather.featherd"
 ---@type lib.feather.petty
