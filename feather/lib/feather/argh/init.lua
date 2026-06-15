@@ -212,24 +212,6 @@ local function getFlag(str, branch, takenFlags)
 	return found, flagsLeft
 end
 
----@param str string
----@param branch feather.argh.spec
-local function isValidArg(str, branch)
-end
-
-
----@generic T
----@param param T[]|T
----@return T[]
-local function arrayIfSingle(param)
-	if not param then
-		return {}
-	end
-	if param[1] then
-		return param
-	end
-	return { param }
-end
 
 ---@param spec feather.argh.spec
 ---@param current string
@@ -260,7 +242,10 @@ function module.complete(spec, current, previous)
 			goto continue
 		end
 		completions = {}
-		local nextBranches = arrayIfSingle(currBranch.next)
+		local nextBranches = currBranch.next
+		if nextBranches and not nextBranches[1] then
+			nextBranches = { nextBranches }
+		end
 
 		local flagCompletions = {}
 
@@ -288,7 +273,7 @@ function module.complete(spec, current, previous)
 			end
 		end
 
-		if not flag and nextBranches[1] then
+		if not flag and nextBranches then
 			for _, specCandidate in ipairs(nextBranches) do
 				featherd.log(specCandidate)
 				local parsedCompletions, isValid = specCandidate.argument(arg, specCandidate)
@@ -313,7 +298,6 @@ function module.complete(spec, current, previous)
 				end
 			end
 		end
-
 
 		if arg == "" and not flag and args[i + 1] then
 			completions = {}
