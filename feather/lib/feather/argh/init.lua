@@ -162,6 +162,7 @@ end
 ---@type table<string, {name: string, description: string, spec: feather.argh.spec}>
 local registry = {}
 
+---@alias feather.argh.flag {short: string?, description: string?}
 
 ---@class feather.argh.spec
 ---@field name? string -- name of the argument, nil if you want it to just be flags
@@ -169,7 +170,9 @@ local registry = {}
 ---@field argument? feather.argh.argumentFunction -- function used for the argument
 ---@field sufficient? boolean -- whether you can end on this argument
 ---@field next? feather.argh.spec|feather.argh.spec[] -- the argument(s) that can be used after this one
----@field flags? table<string, {short: string?, description: string?}> -- flags that appear after the argument
+---@field flags? table<string, feather.argh.flag> -- flags that appear after the argument
+
+
 
 ---@class feather.argh.return
 ---@field name? string
@@ -191,13 +194,22 @@ end
 
 ---@param str string
 ---@param branch feather.argh.spec
----@return string?
-local function getFlag(str, branch)
+---@param takenFlags table<string, boolean>
+---@return string? flagFound
+---@return integer flagsLeft
+local function getFlag(str, branch, takenFlags)
+	local found
+	local flagsLeft = 0
 	for flagName, flagSpec in pairs(branch.flags or {}) do
-		if "--" .. flagName == str or "-" .. flagSpec.short == str then
-			return flagName
+		if takenFlags[flagName] then
+			-- skip
+		elseif "--" .. flagName == str or "-" .. flagSpec.short == str then
+			found = flagName
+		else
+			flagsLeft = flagsLeft + 1
 		end
 	end
+	return found, flagsLeft
 end
 
 ---@param str string
@@ -222,7 +234,11 @@ end
 ---@param spec feather.argh.spec
 ---@param current string
 ---@param previous string[]
+---@return string[] completions
+---@return feather.argh.return[] record
+---@return boolean endsValid
 function module.complete(spec, current, previous)
+	-- this is so far the worst code i've written - birb
 	table.remove(previous, 1)
 	table.insert(previous, current)
 	local args = previous
@@ -232,18 +248,45 @@ function module.complete(spec, current, previous)
 	local record = { currArg }
 	local completions = {}
 	local endsValid = false
+	local broken = false -- broken is considered when it's not valid and won't be valid
 	local done = false
+	local flag
+	local flagsLeft = 0
 	for i, arg in ipairs(args) do
 		done = false
-		local flag = getFlag(arg, currBranch)
+		flag, flagsLeft = getFlag(arg, currBranch, currArg.flags)
 		if flag then
 			currArg.flags[flag] = true
 			goto continue
 		end
-		completions = {} -- the flow is all fucked up with this, i need to rethink all of this
-		-- maybe i should just do this recursively? is there any state i need to keep track of?
-
+		completions = {}
 		local nextBranches = arrayIfSingle(currBranch.next)
+
+		local flagCompletions = {}
+
+		if currBranch.flags then
+			if arg == "" then
+				if flagsLeft > 0 then
+					flagCompletions[#flagCompletions + 1] = "-"
+				end
+			elseif arg == "-" then
+				for flagName, flagSpec in pairs(currBranch.flags) do
+					if not currArg.flags[flagName] then
+						flagCompletions[#flagCompletions + 1] = flagSpec.short .. " "
+					end
+				end
+				if flagsLeft > 0 then
+					flagCompletions[#flagCompletions + 1] = "-"
+				end
+			elseif arg:sub(1, 2) == "--" then
+				local currPartialFlag = arg:sub(3, -1)
+				for flagName in pairs(currBranch.flags) do
+					if not currArg.flags[flagName] and flagName:sub(1, #currPartialFlag) == currPartialFlag then
+						flagCompletions[#flagCompletions + 1] = flagName:sub(#currPartialFlag + 1, -1) .. " "
+					end
+				end
+			end
+		end
 
 		if not flag and nextBranches[1] then
 			for _, specCandidate in ipairs(nextBranches) do
@@ -254,7 +297,7 @@ function module.complete(spec, current, previous)
 					if specCandidate.next or specCandidate.flags then
 						completion = completion .. " "
 					end
-					completions[#completions + 1] = completion
+					table.insert(completions, 1, completion)
 				end
 				if isValid then
 					currBranch = specCandidate
@@ -271,22 +314,15 @@ function module.complete(spec, current, previous)
 			end
 		end
 
-		if currBranch.flags and next(currBranch.flags) then
-			if arg == "" then
-				completions[#completions + 1] = "-" --TODO don't show if no new flags left to do
-			elseif arg == "-" then
-				for _, flagSpec in pairs(currBranch.flags) do
-					completions[#completions + 1] = flagSpec.short .. " "
-				end
-				completions[#completions + 1] = "-" --TODO don't show if no new flags left to do
-			elseif arg:sub(1, 2) == "--" then
-				local currPartialFlag = arg:sub(3, -1)
-				for flagName in pairs(currBranch.flags) do
-					if flagName:sub(1, #currPartialFlag) == currPartialFlag then
-						completions[#completions + 1] = flagName:sub(#currPartialFlag + 1, -1) .. " "
-					end
-				end
-			end
+
+		if arg == "" and not flag and args[i + 1] then
+			completions = {}
+			broken = true
+			break
+		end
+
+		for _, flagCompletion in ipairs(flagCompletions) do
+			completions[#completions + 1] = flagCompletion
 		end
 
 		if done then
@@ -294,11 +330,10 @@ function module.complete(spec, current, previous)
 		end
 		::continue::
 	end
-	featherd.log(currBranch)
-	if (currBranch.next or (currBranch.flags and next(currBranch.flags))) and not completions[1] then
+	if (currBranch.next or flagsLeft > 0) and not completions[1] and not done and not broken and not endsValid then
 		completions[1] = " "
 	end
-	return completions, record, endsValid
+	return completions, record, endsValid -- and yet work it does!
 end
 
 ---@param spec feather.argh.spec
