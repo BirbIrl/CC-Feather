@@ -1,1 +1,1 @@
-shell.execute("./.feather/lib/feather/argh/test.lua")
+shell.execute("./.feather/lib/feather/argh/test.lua", ...)

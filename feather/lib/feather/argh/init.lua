@@ -1,6 +1,7 @@
 local featherd = bundl "feather.featherd" ---@type feather.featherd
 ---@class feather.argh
 local module = {}
+local pp = require("cc.pretty").pretty_print
 
 ---todo: register to help menu as well
 ---todo: flags only work on the first one
@@ -183,13 +184,22 @@ local registry = {}
 ---@param name string
 ---@param description string
 ---@param spec feather.argh.spec
----@param ... string
-function module.parse(path, name, description, spec, ...)
-	if ... == "__ARGH_REGISTER_ARGS" then
+---@param args string[]
+function module.parse(path, name, description, spec, args)
+	if args[1] == "__ARGH_REGISTER_ARGS" then
 		registry[path] = { name = name, description = description, spec = spec }
 		shell.setCompletionFunction(path, module.makeCompletionFunction(spec))
 		return
 	end
+	local last = args[#args]
+	local previous = {}
+	for i = 0, #args - 1, 1 do
+		previous[i + 1] = args[i]
+	end
+	local _, record, invalidArg, complete = module.complete(spec, last, previous)
+	assert(not invalidArg, "Couldn't parse the given argument: " .. (invalidArg or ""))
+	assert(complete, "The program needs more arguments.")
+	return record
 end
 
 ---@param str string
@@ -215,26 +225,28 @@ end
 
 ---@param spec feather.argh.spec
 ---@param current string
----@param previous string[]
+---@param args string[]
 ---@return string[] completions
 ---@return feather.argh.return[] record
----@return boolean endsValid
-function module.complete(spec, current, previous)
+---@return string? invalidArg if the arguments parsed are invalid, this will return the invalid arg
+---@return boolean complete whether there was enough arguments
+function module.complete(spec, current, args)
 	-- this is so far the worst code i've written - birb
-	table.remove(previous, 1)
-	table.insert(previous, current)
-	local args = previous
+	table.insert(args, current)
+	local cmdName = table.remove(args, 1)
 	local currBranch = spec
 	---@type feather.argh.return
-	local currArg = { name = currBranch.name, flags = {}, argument = args[1] }
+	local currArg = { name = "root", flags = {}, argument = cmdName }
 	local record = { currArg }
 	local completions = {}
-	local endsValid = false
+	local endsValid = true
 	local broken = false -- broken is considered when it's not valid and won't be valid
-	local done = false
+	local done = true
 	local flag
 	local flagsLeft = 0
+	local lastParsedArg = cmdName -- used to return where the parser broke
 	for i, arg in ipairs(args) do
+		lastParsedArg = arg
 		done = false
 		flag, flagsLeft = getFlag(arg, currBranch, currArg.flags)
 		if flag then
@@ -275,7 +287,6 @@ function module.complete(spec, current, previous)
 
 		if not flag and nextBranches then
 			for _, specCandidate in ipairs(nextBranches) do
-				featherd.log(specCandidate)
 				local parsedCompletions, isValid = specCandidate.argument(arg, specCandidate)
 				endsValid = isValid
 				for _, completion in ipairs(parsedCompletions) do
@@ -299,7 +310,7 @@ function module.complete(spec, current, previous)
 			end
 		end
 
-		if arg == "" and not flag and args[i + 1] then
+		if arg == ("--"):sub(1, #arg) and not flag and args[i + 1] then
 			completions = {}
 			broken = true
 			break
@@ -317,7 +328,8 @@ function module.complete(spec, current, previous)
 	if (currBranch.next or flagsLeft > 0) and not completions[1] and not done and not broken and not endsValid then
 		completions[1] = " "
 	end
-	return completions, record, endsValid -- and yet work it does!
+	local complete = currBranch.sufficient or not currBranch.next
+	return completions, record, (not endsValid and lastParsedArg) or nil, complete -- and yet work it does!
 end
 
 ---@param spec feather.argh.spec
