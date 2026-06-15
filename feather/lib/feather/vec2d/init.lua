@@ -1,5 +1,5 @@
 local pretty = require("cc.pretty")
----@class lib.feather.vec2d
+---@class feather.vec2d
 ---@field x  number
 ---@field y number
 local module = {}
@@ -20,7 +20,7 @@ function module:clone()
 	return self.new(self.x, self.y)
 end
 
----@param any lib.feather.vec2d|number
+---@param any feather.vec2d|number
 local function ensureVec(any)
 	if type(any) == "number" then
 		return module.new(any, any)
@@ -40,39 +40,39 @@ function module:contains(target)
 	return target.x >= 0 and target.y >= 0 and self.x >= target.x and self.y >= target.y
 end
 
----@param target lib.feather.vec2d
----@return lib.feather.vec2d
+---@param target feather.vec2d
+---@return feather.vec2d
 function module:__add(target)
 	self = ensureVec(self)
 	target = ensureVec(target)
 	return module.new(self.x + target.x, self.y + target.y)
 end
 
----@param target lib.feather.vec2d
----@return lib.feather.vec2d
+---@param target feather.vec2d
+---@return feather.vec2d
 function module:__sub(target)
 	self = ensureVec(self)
 	target = ensureVec(target)
 	return module.new(self.x - target.x, self.y - target.y)
 end
 
----@param target lib.feather.vec2d
----@return lib.feather.vec2d
+---@param target feather.vec2d
+---@return feather.vec2d
 function module:__mul(target)
 	self = ensureVec(self)
 	target = ensureVec(target)
 	return module.new(self.x * target.x, self.y * target.y)
 end
 
----@param target lib.feather.vec2d
----@return lib.feather.vec2d
+---@param target feather.vec2d
+---@return feather.vec2d
 function module:__div(target)
 	self = ensureVec(self)
 	target = ensureVec(target)
 	return module.new(self.x / target.x, self.y / target.y)
 end
 
----@param target lib.feather.vec2d
+---@param target feather.vec2d
 function module:__eq(target)
 	return self.x == target.x and self.y == target.y
 end

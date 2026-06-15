@@ -1,5 +1,5 @@
 local pretty = require("cc.pretty")
----@class lib.feather.petty: ccTweaked.cc.pretty
+---@class feather.petty: ccTweaked.cc.pretty
 local module = {}
 setmetatable(module, { __index = pretty })
 local docMt = getmetatable(module.empty)
@@ -95,11 +95,11 @@ function module.getSize(doc)
 	return longestLine, lines
 end
 
----@alias lib.feather.petty.alignment "left"|"right"|"center"
+---@alias feather.petty.alignment "left"|"right"|"center"
 
 ---@param obj ccTweaked.cc.pretty.Doc.concat
 ---@param maxLength integer
----@param alignment lib.feather.petty.alignment
+---@param alignment feather.petty.alignment
 ---@return ccTweaked.cc.pretty.Doc.concat
 function module.align(obj, maxLength, alignment)
 	if alignment == "left" then

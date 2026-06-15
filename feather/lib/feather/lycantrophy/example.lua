@@ -1,6 +1,6 @@
 local vec = bundl "feather.vec2d" ---@type lib.feather.vec2d
 local lycantrophy = bundl "feather.lycantrophy" ---@type lib.feather.lycantrophy
-local petty = bundl "feather.petty" ---@type lib.feather.petty
+local petty = bundl "feather.petty" ---@type feather.petty
 
 local config = lycantrophy.newConfig()
 config.maxSize = vec.newCCSquare(10)

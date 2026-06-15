@@ -271,7 +271,7 @@ end
 ---@param pidOrThread? integer|thread
 ---@return nil
 function module.log(message, level, pidOrThread)
-	---@type lib.feather.petty
+	---@type feather.petty
 	local petty = bundl("feather.petty")
 	level = level or "log"
 	pidOrThread = pidOrThread or coroutine.running()
@@ -300,7 +300,7 @@ end
 ---@param logFilePath string
 ---@return ccTweaked.cc.pretty.Doc.concat doc
 function module.formatLog(logFilePath)
-	---@type lib.feather.petty
+	---@type feather.petty
 	local petty = bundl("feather.petty")
 	local logFile = fs.open(logFilePath, "r")
 	assert(logFile, "Couldn't open file")

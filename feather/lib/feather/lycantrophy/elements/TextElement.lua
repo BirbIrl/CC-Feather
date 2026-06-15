@@ -1,16 +1,16 @@
-local petty = bundl "feather.petty" ---@type lib.feather.petty
+local petty = bundl "feather.petty" ---@type feather.petty
 local vec = bundl("feather.vec2d") ---@type lib.feather.vec2d
 local Element = bundl "feather.lycantrophy.elements.Element" ---@type lib.feather.lycantrophy.Element
 
 ---@class lib.feather.lycantrophy.TextElement: lib.feather.lycantrophy.Element
 ---@field text ccTweaked.cc.pretty.Doc.concat|ccTweaked.cc.pretty.Doc.text
----@field alignment lib.feather.petty.alignment
+---@field alignment feather.petty.alignment
 ---@field wrapped ccTweaked.cc.pretty.Doc.concat
 ---@field super lib.feather.lycantrophy.Element
 local TextElement = Element:extend()
 
 ---@param text ccTweaked.cc.pretty.Doc.concat|ccTweaked.cc.pretty.Doc.text
----@param alignemnt? lib.feather.petty.alignment
+---@param alignemnt? feather.petty.alignment
 ---@param config? lib.feather.lycantrophy.config
 ---@return lib.feather.lycantrophy.TextElement
 function TextElement:new(text, alignemnt, config)

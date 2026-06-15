@@ -1,7 +1,8 @@
 local featherd = bundl "feather.featherd" ---@type feather.featherd
+local petty = bundl "feather.petty" ---@type feather.petty
+local mess = bundl "feather.mess" ---@type feather.mess
 ---@class feather.argh
 local module = {}
-local pp = require("cc.pretty").pretty_print
 
 ---todo: register to help menu as well
 ---todo: flags only work on the first one
@@ -340,7 +341,19 @@ function module.makeCompletionFunction(spec)
 	end
 end
 
-function module.help()
+---@param path string
+function module.help(path)
+	local program = registry[path]
+	assert(program, "Program under path: " .. path .. " is not registered to then have it's help menu displayed.")
+	local helpText = petty.text(program.name, colors.yellow) .. " - " .. program.description
+	local w, h = term.getSize()
+	local doc, textHeight = petty.wrap(helpText, w)
+	if textHeight >= h then
+		mess.focus(doc)
+	else
+		petty.pp(helpText, nil, nil, nil)
+		print()
+	end
 end
 
 -- programs called with the argument __ARGH_REGISTER_ARGS will have an extra trigger in argh.parse, that would parse the function's autocompletion for the shell

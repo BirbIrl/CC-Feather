@@ -32,7 +32,10 @@ shell.setCompletionFunction("test.lua", argh.makeCompletionFunction(
 	spec
 ))
 
+argh.parse("test.lua", "test", "testing function", spec, arg)
 
-local pp = require("cc.pretty").pretty_print
+--local pp = require("cc.pretty").pretty_print
 
-pp(argh.parse("test.lua", "test", "testing function", spec, arg))
+--pp()
+
+argh.help("test.lua")

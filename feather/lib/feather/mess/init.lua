@@ -1,11 +1,11 @@
 --TODO: support relative path
 ---@type feather.featherd
 local featherd = bundl "feather.featherd"
----@type lib.feather.petty
+---@type feather.petty
 local petty = bundl("feather.petty")
----@type lib.feather.vec2d
+---@type feather.vec2d
 local vec = bundl("feather.vec2d")
----@class lib.feather.mess
+---@class feather.mess
 local module = {}
 ---@param doc ccTweaked.cc.pretty.Doc.text
 ---@param yShift integer
@@ -94,7 +94,7 @@ function module.focus(doc)
 	local refresh = true
 	---@type "search"?
 	local mode
-	---@type {pos: lib.feather.vec2d, contents: string}[]
+	---@type {pos: feather.vec2d, contents: string}[]
 	local searchHits = {}
 	local currSearchFocus
 	---@type integer?
