@@ -232,8 +232,9 @@ function module.complete(spec, current, previous)
 	local record = { currArg }
 	local completions = {}
 	local endsValid = false
+	local done = false
 	for i, arg in ipairs(args) do
-		local done = false
+		done = false
 		local flag = getFlag(arg, currBranch)
 		if flag then
 			currArg.flags[flag] = true
@@ -244,17 +245,22 @@ function module.complete(spec, current, previous)
 
 		local nextBranches = arrayIfSingle(currBranch.next)
 
-		if nextBranches[1] then
+		if not flag and nextBranches[1] then
 			for _, specCandidate in ipairs(nextBranches) do
+				featherd.log(specCandidate)
 				local parsedCompletions, isValid = specCandidate.argument(arg, specCandidate)
 				endsValid = isValid
 				for _, completion in ipairs(parsedCompletions) do
+					if specCandidate.next or specCandidate.flags then
+						completion = completion .. " "
+					end
 					completions[#completions + 1] = completion
 				end
 				if isValid then
 					currBranch = specCandidate
 					currArg = { name = currBranch.name, flags = {}, argument = arg }
 					record[#record + 1] = currArg
+					done = false
 					break
 				elseif arg ~= "" then
 					if i ~= #args then
@@ -268,16 +274,16 @@ function module.complete(spec, current, previous)
 		if currBranch.flags and next(currBranch.flags) then
 			if arg == "" then
 				completions[#completions + 1] = "-" --TODO don't show if no new flags left to do
-			elseif currArg.argument == "-" then
+			elseif arg == "-" then
 				for _, flagSpec in pairs(currBranch.flags) do
-					completions[#completions + 1] = flagSpec.short
+					completions[#completions + 1] = flagSpec.short .. " "
 				end
 				completions[#completions + 1] = "-" --TODO don't show if no new flags left to do
-			elseif currArg.argument:sub(1, 2) == "--" then
-				local currPartialFlag = currArg.argument:sub(3, -1)
+			elseif arg:sub(1, 2) == "--" then
+				local currPartialFlag = arg:sub(3, -1)
 				for flagName in pairs(currBranch.flags) do
 					if flagName:sub(1, #currPartialFlag) == currPartialFlag then
-						completions[#completions + 1] = flagName:sub(#currPartialFlag + 1, -1)
+						completions[#completions + 1] = flagName:sub(#currPartialFlag + 1, -1) .. " "
 					end
 				end
 			end
@@ -288,10 +294,9 @@ function module.complete(spec, current, previous)
 		end
 		::continue::
 	end
-	if arrayIfSingle(currBranch.next)[1] or (currBranch.flags and next(currBranch.flags)) then
-		for i, completion in ipairs(completions) do
-			completions[i] = completion .. " "
-		end
+	featherd.log(currBranch)
+	if (currBranch.next or (currBranch.flags and next(currBranch.flags))) and not completions[1] then
+		completions[1] = " "
 	end
 	return completions, record, endsValid
 end

@@ -5,18 +5,24 @@ shell.setCompletionFunction("rom/programs/fun/hello.lua", argh.makeCompletionFun
 	{
 		flags = { test = { short = "t" }, silent = { short = "s" } },
 		next = {
-			name = "label",
-			argument = argh.argument.name,
-			flags = { test = { short = "t" }, silent = { short = "s" } },
-			next = {
-				{
-					name = "customFilter",
-					argument = argh.argument.name,
+			{
+				name = "label",
+				argument = argh.argument.name,
+				flags = { test = { short = "t" }, silent = { short = "s" } },
+				next = {
+					{
+						name = "customFilter",
+						argument = argh.argument.name,
+					},
+					{
+						name = "anyString",
+						argument = argh.argument.string,
+					},
 				},
-				{
-					name = "anyString",
-					argument = argh.argument.string,
-				},
+			},
+			{
+				name = "help",
+				argument = argh.argument.name,
 			}
 		},
 	}
