@@ -25,7 +25,7 @@ description = {
 }
 
 build = {
-	type = "lib", -- not compatible with luarocks
+	type = type, -- not compatible with luarocks
 }
 
 source = {
