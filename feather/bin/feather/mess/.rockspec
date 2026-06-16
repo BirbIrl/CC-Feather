@@ -5,7 +5,7 @@ local ver = "unstable"
 local summary = "text reader for computercraft"
 local detailed =
 [[Command line tool for reading files and searching for content inside them]]
-local deps = { "lib.feather.mess" }
+local deps = { "lib.feather.mess", "lib.feather.argh" }
 
 local url = "github.com/birbirl/CC-Feather"
 local manifest = "feather"
