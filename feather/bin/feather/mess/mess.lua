@@ -6,7 +6,7 @@ local mess = bundl("feather.mess")
 local argh = bundl "feather.argh" ---@type feather.argh
 
 
-local programPath = fs.combine(feather.installPath(), "bin/feather/mess/mess.lua")
+local programPath = fs.combine(feather.installPath, "bin/feather/mess/mess.lua")
 local args = argh.parse(programPath, "mess", "a lua reimplementation of less",
 	{
 		flags = {

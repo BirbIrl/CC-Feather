@@ -48,7 +48,7 @@ rednet.host(protocol, os.getComputerLabel() or "unlabelled")
 local function handleGet(sender, message)
 	local contents = message.contents
 	local pkgPath = contents.packageName:gsub('%.', "/")
-	local path = fs.combine(feather.installPath(), pkgPath)
+	local path = fs.combine(feather.installPath, pkgPath)
 	if not fs.exists(path) then
 		---@type feather.mirrord.message.bundle.failToFind
 		local answer = {

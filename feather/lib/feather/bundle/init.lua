@@ -73,7 +73,7 @@ end
 ---@return feather.bundle.packageTable
 function module.listInstalled()
 	local packages = {}
-	local installPath = feather.installPath()
+	local installPath = feather.installPath
 	for _, typePath in pairs({ "lib", "bin" }) do
 		typePath = fs.combine(installPath, typePath)
 		for _, manifestName in ipairs(fs.list(typePath)) do
@@ -114,7 +114,7 @@ end
 ---@return feather.bundle.rockspec?
 function module.get(pkgName)
 	local pkgPath = pkgName:gsub("%.", "/")
-	return loadRockspec(fs.combine(feather.installPath(), pkgPath, ".rockspec"))
+	return loadRockspec(fs.combine(feather.installPath, pkgPath, ".rockspec"))
 end
 
 ---@param pkgName string

@@ -1,6 +1,6 @@
 local argh = bundl "feather.argh" ---@type feather.argh
 
-local programPath = fs.combine(feather.installPath(), "bin/feather/flash/flash.lua")
+local programPath = fs.combine(feather.installPath, "bin/feather/flash/flash.lua")
 local args = argh.parse(programPath, "flash", "a tool for installing featheros on other systems.",
 	{
 		flags = {

@@ -35,9 +35,7 @@ function feather.getVersion()
 end
 
 -- path of the current feather installation
-function feather.installPath()
-	return fs.getDir(fs.getDir(fs.getDir(fs.getDir(debug.getinfo(1).source:sub(2, -1))))) -- yep.
-end
+feather.installPath = fs.getDir(fs.getDir(fs.getDir(fs.getDir(debug.getinfo(1).source:sub(2, -1))))) -- yep.
 
 feather.pp = require("cc.pretty").pretty_print
 
@@ -52,7 +50,7 @@ end
 function feather.updatePath()
 	shell.setPath(staticPath)
 
-	local binPath = fs.combine(feather.installPath(), "bin")
+	local binPath = fs.combine(feather.installPath, "bin")
 	for _, manifest in ipairs(fs.list(binPath)) do
 		local manifestPath = fs.combine(binPath, manifest)
 		for _, entry in ipairs(fs.list(manifestPath)) do

@@ -236,7 +236,7 @@ end
 function module.init()
 	featherd.addProcess("arghRegisterer", function()
 		local bundle = bundl("feather.bundle") ---@type feather.bundle
-		local installPath = feather.installPath()
+		local installPath = feather.installPath
 		for _, rockspec in pairs(bundle.listInstalled()) do
 			if rockspec.build.type == "bin" and tableContains(rockspec.dependencies, "lib.feather.argh") then
 				local binDirPath = fs.combine(installPath, rockspec.source.dir)
