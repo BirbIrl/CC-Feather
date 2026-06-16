@@ -1,21 +1,27 @@
-local function describeArg(argument, desc)
-	term.setTextColor(colors.gray)
-	write("\n" .. arg[0] .. " ")
-	term.setTextColor(colors.yellow)
-	write(argument)
-	term.setTextColor(colors.white)
-	print(" - " .. desc)
-end
-local function help()
-	term.setTextColor(colors.yellow)
-	write("Flash")
-	term.setTextColor(colors.white)
-	print(" installs FeatherOS onto another machine.")
-	describeArg("", "installs featheros to computer or disk in drive")
-	describeArg("force", "doesn't prompt to confirm")
-	describeArg("[path]", "installs featheros to given path")
-	describeArg("[path] force", "doesn't prompt to confirm")
-end
+local argh = bundl "feather.argh" ---@type feather.argh
+
+local programPath = fs.combine(feather.installPath(), "bin/feather/flash/flash.lua")
+local args = argh.parse(programPath, "flash", "a tool for installing featheros on other systems.",
+	{
+		flags = {
+			force = { short = "f", description = "doesn't prompt to confirm" },
+		},
+		description = "installs FeatherOS to an attached disk if provided.",
+		sufficient = true,
+		next = {
+			{
+				name = "installPath",
+				description = "path to install featheros in",
+				argument = argh.argument.dir,
+			},
+			{
+				name = "help",
+				description = "shows this help menu",
+				argument = argh.argument.name,
+			},
+		}
+	}, ...)
+
 
 local function deserialiseFile(path)
 	local file = fs.open(path, "r")
@@ -42,7 +48,8 @@ local function install(path)
 		".feather/lib/feather/vec2d",
 		".feather/lib/feather/mush",
 		".feather/bin/feather/mush",
-		".feather/lib/feather/storage"
+		".feather/lib/feather/storage",
+		".feather/lib/feather/argh"
 	}
 	for _, path in ipairs(paths) do
 		local combined = fs.combine(mountPath, path)
@@ -62,24 +69,27 @@ local function install(path)
 	settingsFile.close()
 end
 
-help()
-
-local force = ... == "force"
-if select(2, ...) then
-	force = select(2, ...) == force
+if args[2] and args[2].name == "help" then
+	argh.help(programPath)
+	return
 end
+
+local force = args[1].flags.force
 
 
 ---@type ccTweaked.peripheral.Drive[]
 local drives = table.pack(peripheral.find("drive"))
-local path = ...
+---@type string?
+local path = args[2] and args[2].argument
+require("cc.pretty").pretty_print(args)
 if drives[1] then
 	assert(#drives == 1, "There must be exactly one disk drive connected or a path provided. Found " .. #drives)
 	if not path then
 		path = drives[1].getMountPath()
 	end
 end
-assert(path, "Path must be provided")
+
+assert(path, "Path must be provided or a disk drive must be attached.")
 
 assert(fs.exists(path), "Given path doesn't exist: " .. path)
 

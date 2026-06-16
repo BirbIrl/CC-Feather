@@ -5,8 +5,9 @@ local mess = bundl("feather.mess")
 
 local argh = bundl "feather.argh" ---@type feather.argh
 
-local path = ".feather/bin/feather/mess/mess.lua"
-local args = argh.parse(path, "mess", "a lua reimplementation of less",
+
+local programPath = fs.combine(feather.installPath(), "bin/feather/mess/mess.lua")
+local args = argh.parse(programPath, "mess", "a lua reimplementation of less",
 	{
 		flags = {
 			wrap = { short = "w", description = "wraps text to fit the terminal" },
@@ -29,7 +30,7 @@ local args = argh.parse(path, "mess", "a lua reimplementation of less",
 
 
 if not args[2] or args[2].name == "help" then
-	argh.help(path)
+	argh.help(programPath)
 	return
 end
 

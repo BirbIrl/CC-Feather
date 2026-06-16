@@ -39,6 +39,8 @@ function feather.installPath()
 	return fs.getDir(fs.getDir(fs.getDir(fs.getDir(debug.getinfo(1).source:sub(2, -1))))) -- yep.
 end
 
+feather.pp = require("cc.pretty").pretty_print
+
 local staticPath = shell.path()
 
 --- allows adding entries to the PATH without it getting overriden
@@ -98,6 +100,7 @@ elseif argument == "startup" then
 	_G.os.version = feather.getVersion
 	_G.feather = feather
 	_G.bundl = bundl
+	_G.dbg = require("cc.pretty").pretty_print
 	feather.updatePath()
 	featherd.init()
 elseif argument == nil then

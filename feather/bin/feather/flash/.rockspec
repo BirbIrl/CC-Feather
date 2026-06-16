@@ -5,7 +5,7 @@ local ver = "unstable"
 local summary = "CLI for flashing FeatherOS on Computercraft computers"
 local detailed =
 [[Command line tool for copying a modifiable installation of FeatherOS onto another computer]]
-local deps = { "bin.feather.featherOS" }
+local deps = { "bin.feather.featherOS", "lib.feather.argh" }
 
 local url = "github.com/birbirl/CC-Feather"
 local manifest = "feather"

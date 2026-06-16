@@ -217,7 +217,7 @@ function module.parse(path, name, description, spec, ...)
 	local args = table.pack(...)
 	local last = args[#args]
 	args[#args] = nil
-	args[0] = shell.getRunningProgram()
+	table.insert(args, 1, shell.getRunningProgram())
 	local _, record, invalidArg, complete = module.complete(spec, last, args)
 	assert(not invalidArg, "Couldn't parse the given argument: " .. (invalidArg or ""))
 	assert(complete, "The program needs more arguments.")

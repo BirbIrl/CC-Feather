@@ -1,8 +1,6 @@
 {
-  [ "list.show_hidden" ] = true,
-  [ "bios.use_multishell" ] = false,
-  [ "motd.enable" ] = false,
   [ "shell.allow_disk_startup" ] = false,
+  [ "motd.enable" ] = false,
   [ "feather.featherd.units" ] = {
     mirrord = {
       onDeath = "keep",
@@ -13,5 +11,7 @@
       command = "comfortd",
     },
   },
+  [ "bios.use_multishell" ] = false,
   [ "feather.bundle.mirrorID" ] = 2,
+  [ "list.show_hidden" ] = true,
 }
