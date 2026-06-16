@@ -1,3 +1,4 @@
+local completion = require "cc.shell.completion"
 local featherd = bundl "feather.featherd" ---@type feather.featherd
 local petty = bundl "feather.petty" ---@type feather.petty
 local mess = bundl "feather.mess" ---@type feather.mess
@@ -142,16 +143,17 @@ end
 module.argument = {
 }
 
+---TODO: should probably make a way to identify if a function is loose or not instead of just chudding it out with adding text to the name.. or maybe i should use text objects.. i just want it colored but also handle it for hints.
 function module.argument.string(str, spec)
 	if #str > 0 then
 		return {}, true
 	end
-	return { "[" .. spec.name .. "]" }, true
+	return { petty.text("[", colors.gray) .. petty.text(spec.name, colors.yellow) .. petty.text("]", colors.gray) }, true
 end
 
 function module.argument.number(str, spec)
 	local name, valid = module.argument.string(str, spec)
-	return name, tonumber(valid) ~= nil
+	return name, valid and tonumber(str) ~= nil
 end
 
 function module.argument.name(str, spec)
@@ -161,7 +163,23 @@ function module.argument.name(str, spec)
 	return { spec.name:sub(#str + 1, -1) }, spec.name == str
 end
 
----@type table<string, {name: string, description: string, spec: feather.argh.spec}>
+function module.argument.dir(str, _)
+	local absolutePath = fs.combine(shell.dir(), str)
+	return completion.dir(shell, str), #str > 0 and fs.isDir(absolutePath)
+end
+
+function module.argument.file(str, _)
+	local absolutePath = fs.combine(shell.dir(), str)
+	return completion.file(shell, str), #str > 0 and fs.exists(absolutePath) and not fs.isDir(absolutePath)
+end
+
+function module.argument.path(str, _)
+	local absolutePath = fs.combine(shell.dir(), str)
+	return completion.dirOrFile(shell, str), #str > 0 and fs.exists(absolutePath)
+end
+
+---@alias  feather.argh.registryEntry  {name: string, description: string, spec: feather.argh.spec}
+---@type table<string, feather.argh.registryEntry>
 local registry = {}
 
 ---@alias feather.argh.flag {short: string?, description: string?}
@@ -186,11 +204,12 @@ local registry = {}
 ---@param description string
 ---@param spec feather.argh.spec
 ---@param args string[]
+---@return feather.argh.return[]
 function module.parse(path, name, description, spec, args)
 	if args[1] == "__ARGH_REGISTER_ARGS" then
 		registry[path] = { name = name, description = description, spec = spec }
 		shell.setCompletionFunction(path, module.makeCompletionFunction(spec))
-		return
+		error("successfuly registered")
 	end
 	local last = args[#args]
 	local previous = {}
@@ -294,7 +313,7 @@ function module.complete(spec, current, args)
 					if specCandidate.next or specCandidate.flags then
 						completion = completion .. " "
 					end
-					table.insert(completions, 1, completion)
+					table.insert(completions, tostring(completion))
 				end
 				if isValid then
 					currBranch = specCandidate
@@ -341,11 +360,86 @@ function module.makeCompletionFunction(spec)
 	end
 end
 
+---@param  spec feather.argh.spec
+local function chainsToSufficiency(spec)
+	if spec.sufficient and spec.next then
+		return true
+	end
+	if spec.next then
+		for _, nextSpec in ipairs(spec.next) do
+			if chainsToSufficiency(nextSpec) then
+				return true
+			end
+		end
+	end
+	return false
+end
+
+---@param branch feather.argh.spec
+---@param name string|ccTweaked.cc.pretty.Doc -- gets edited further down the chain to match args
+---@param doc ccTweaked.cc.pretty.Doc.concat
+---@param lastDescription? string only called from within the loop to remember the description down the chain
+---@param notFirst true? only assigned from within the loop to prevent writing text too much
+---@return ccTweaked.cc.pretty.Doc.concat, table<string,feather.argh.flag>
+local function appendArgHelpText(branch, name, doc, lastDescription, notFirst)
+	if type(name) == "string" then
+		name = petty.text(name, colors.gray)
+	end
+	local description = branch.description or lastDescription
+	local flags = branch.flags or {}
+	if (branch.sufficient or not branch.next) and description then
+		doc = doc .. petty.line .. name .. " - " .. description
+	end
+	if branch.next then
+		for _, nextBranch in ipairs(branch.next) do
+			local newFlags
+			local defaultResults = nextBranch.argument("", nextBranch)
+			---@type ccTweaked.cc.pretty.Doc|string
+			local argName = (defaultResults and defaultResults[1]) or nextBranch.name or ""
+			if type(argName) == "string" then
+				argName = petty.text(nextBranch.name, colors.yellow)
+			end
+			if not chainsToSufficiency(branch) then
+				argName = argName .. petty.text("?", colors.gray)
+			end
+			argName = name .. " " .. argName
+			doc, newFlags = appendArgHelpText(nextBranch, argName,
+				doc, description, true)
+			if newFlags then
+				for flagName, flag in pairs(newFlags) do
+					if flag.description then
+						flags[flagName] = flag
+					end
+				end
+			end
+		end
+	end
+	if not notFirst then
+		local flagsAlphabetically = {}
+		for flagName, _ in pairs(flags) do
+			flagsAlphabetically[#flagsAlphabetically + 1] = flagName
+		end
+		table.sort(flagsAlphabetically)
+		for _, flagName in ipairs(flagsAlphabetically) do
+			local flag = flags[flagName]
+			if flag.description then
+				doc = doc .. petty.line .. "  " ..
+					petty.text("-" .. flag.short, colors.yellow) ..
+					petty.text("/", colors.gray) ..
+					petty.text("--" .. flagName, colors.yellow) ..
+					": " .. flag.description
+			end
+		end
+	end
+	return doc, branch.flags
+end
+
 ---@param path string
 function module.help(path)
 	local program = registry[path]
 	assert(program, "Program under path: " .. path .. " is not registered to then have it's help menu displayed.")
-	local helpText = petty.text(program.name, colors.yellow) .. " - " .. program.description
+	local helpText = petty.text(program.name, colors.yellow) .. ", " .. program.description
+	helpText = appendArgHelpText(program.spec, program.name, helpText)
 	local w, h = term.getSize()
 	local doc, textHeight = petty.wrap(helpText, w)
 	if textHeight >= h then
