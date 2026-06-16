@@ -49,7 +49,9 @@ local function install(path)
 		".feather/lib/feather/mush",
 		".feather/bin/feather/mush",
 		".feather/lib/feather/storage",
-		".feather/lib/feather/argh"
+		".feather/lib/feather/argh",
+		".feather/lib/feather/petty",
+		".feather/lib/feather/mess"
 	}
 	for _, path in ipairs(paths) do
 		local combined = fs.combine(mountPath, path)
@@ -81,7 +83,6 @@ local force = args[1].flags.force
 local drives = table.pack(peripheral.find("drive"))
 ---@type string?
 local path = args[2] and args[2].argument
-require("cc.pretty").pretty_print(args)
 if drives[1] then
 	assert(#drives == 1, "There must be exactly one disk drive connected or a path provided. Found " .. #drives)
 	if not path then
