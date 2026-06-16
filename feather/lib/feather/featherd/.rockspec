@@ -4,7 +4,7 @@ local ver = "unstable"
 local summary = "deamon manager for featheros"
 local detailed =
 [[]]
-local deps = { "lib.feather.petty", "lib.feather.mess" }
+local deps = { "lib.feather.petty", "lib.feather.mess", "lib.feather.argh" }
 
 local url = "github.com/birbirl/CC-Feather"
 local manifest = "feather"

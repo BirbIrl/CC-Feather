@@ -45,7 +45,10 @@ module.units = settings.get("feather.featherd.units", {})
 --- initializes featherd in it's full. should only be called by featherOS startup
 function module.init()
 	assert(not module.locked, "featherd is already running!")
-	bundl "feather.mush".init()
+	local mush = bundl "feather.mush" ---@type feather.mush
+	mush.init()
+	local argh = bundl "feather.argh" ---@type feather.argh
+	argh.init()
 	module.loadUnits()
 	module.runProcesses()
 	os.shutdown()

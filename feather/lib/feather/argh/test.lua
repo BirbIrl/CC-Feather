@@ -38,7 +38,7 @@ local spec = {
 	},
 }
 
-local args = argh.parse("test.lua", "test", "testing function", spec, arg)
+local args = argh.parse("test.lua", "test", "testing function", spec, ...)
 
 if not args[2] or args[2].name == "help" then
 	argh.help("test.lua")

@@ -6,7 +6,7 @@ local storage = bundl "feather.storage" ---@type feather.storage
 ---@field version string -- version of package
 ---@field description feather.bundle.rockspec.description -- additional package information
 ---@field source feather.bundle.rockspec.source -- additional information as to where to find the package
----@field build feather.bundle.rockspec.build
+---@field build feather.bundle.rockspec.build -- build information
 ---@field dependencies string[] -- list of dependent packages by name
 
 ---@class feather.bundle.rockspec.description

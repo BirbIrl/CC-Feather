@@ -24,7 +24,7 @@ local args = argh.parse(path, "mess", "a lua reimplementation of less",
 				argument = argh.argument.name,
 			},
 		}
-	}, arg)
+	}, ...)
 
 
 

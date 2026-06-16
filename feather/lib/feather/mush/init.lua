@@ -1,7 +1,7 @@
 local featherd = bundl "feather.featherd" ---@type feather.featherd
 local windex = bundl "feather.windex" ---@type feather.windex
 local tty = bundl "feather.tty" ---@type feather.tty
-local vec = bundl "feather.vec2d" ---@type lib.feather.vec2d
+local vec = bundl "feather.vec2d" ---@type feather.vec2d
 
 ---@class feather.mush
 local module = {}
@@ -123,8 +123,7 @@ function module.init()
 				end
 			end
 		end
-	end, "keep", true, windex.create(term.current(), 1, 1, select(1, term.getSize()), 1, true), "silent"
-	)
+	end, "keep", true, windex.create(term.current(), 1, 1, select(1, term.getSize()), 1, true), "silent")
 	shell.openTab("shell")
 	shell.switchTab(#tabs)
 end

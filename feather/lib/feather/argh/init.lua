@@ -5,6 +5,9 @@ local mess = bundl "feather.mess" ---@type feather.mess
 ---@class feather.argh
 local module = {}
 
+local registerArgsArg = "__ARGH_REGISTER_ARGS"
+local registeredSuccessfullyMessage = "Args registered successfuly"
+
 ---todo: register to help menu as well
 ---todo: flags only work on the first one
 ---todo: flags shouldn't show up for flags that were already filled
@@ -203,23 +206,61 @@ local registry = {}
 ---@param name string
 ---@param description string
 ---@param spec feather.argh.spec
----@param args string[]
+---@param ...string
 ---@return feather.argh.return[]
-function module.parse(path, name, description, spec, args)
-	if args[1] == "__ARGH_REGISTER_ARGS" then
+function module.parse(path, name, description, spec, ...)
+	if ... == registerArgsArg then
 		registry[path] = { name = name, description = description, spec = spec }
 		shell.setCompletionFunction(path, module.makeCompletionFunction(spec))
-		error("successfuly registered")
+		error(registeredSuccessfullyMessage)
 	end
+	local args = table.pack(...)
 	local last = args[#args]
-	local previous = {}
-	for i = 0, #args - 1, 1 do
-		previous[i + 1] = args[i]
-	end
-	local _, record, invalidArg, complete = module.complete(spec, last, previous)
+	args[#args] = nil
+	args[0] = shell.getRunningProgram()
+	local _, record, invalidArg, complete = module.complete(spec, last, args)
 	assert(not invalidArg, "Couldn't parse the given argument: " .. (invalidArg or ""))
 	assert(complete, "The program needs more arguments.")
 	return record
+end
+
+local function tableContains(tbl, elem)
+	for _, value in pairs(tbl) do
+		if value == elem then
+			return true
+		end
+	end
+	return false
+end
+
+function module.init()
+	featherd.addProcess("arghRegisterer", function()
+		local bundle = bundl("feather.bundle") ---@type feather.bundle
+		local installPath = feather.installPath()
+		for _, rockspec in pairs(bundle.listInstalled()) do
+			if rockspec.build.type == "bin" and tableContains(rockspec.dependencies, "lib.feather.argh") then
+				local binDirPath = fs.combine(installPath, rockspec.source.dir)
+				for _, fileName in ipairs(fs.list(binDirPath)) do
+					if fileName:sub(-4, -1) == ".lua" then
+						local fullPath = fs.combine(binDirPath, fileName)
+						local chunk = loadfile(fullPath)
+						if chunk then
+							local _, message = pcall(chunk, registerArgsArg)
+							if type(message) == "string" and message:find(registeredSuccessfullyMessage) then
+								featherd.log("Registered args for: " .. fullPath)
+							else
+								featherd.log(
+									"Didn't register args for: " .. fullPath .. " the error message reads: " .. message,
+									"error")
+							end
+						else
+							featherd.log("Couldn't load code chunk for: " .. fullPath)
+						end
+					end
+				end
+			end
+		end
+	end)
 end
 
 ---@param str string
