@@ -8,6 +8,9 @@ local module = {}
 local registerArgsArg = "__ARGH_REGISTER_ARGS"
 local registeredSuccessfullyMessage = "Args registered successfuly"
 
+local helpPath = fs.combine(feather.installPath, "share/argh")
+help.setPath(help.path() .. ":" .. helpPath)
+
 ---todo: register to help menu as well
 ---todo: flags only work on the first one
 ---todo: flags shouldn't show up for flags that were already filled
@@ -212,6 +215,11 @@ function module.parse(path, name, description, spec, ...)
 	if ... == registerArgsArg then
 		registry[path] = { name = name, description = description, spec = spec }
 		shell.setCompletionFunction(path, module.makeCompletionFunction(spec))
+		local helpFilePath = fs.combine(helpPath, name)
+		local helpFile = fs.open(helpFilePath, "w")
+		assert(helpFile, "couldn't make a help file at " .. helpFilePath)
+		helpFile.write(tostring(module.makeHelpText(path)))
+		helpFile.close()
 		error(registeredSuccessfullyMessage)
 	end
 	local args = table.pack(...)
@@ -475,12 +483,20 @@ local function appendArgHelpText(branch, name, doc, lastDescription, notFirst)
 	return doc, branch.flags
 end
 
+---@private
 ---@param path string
-function module.help(path)
+---@return ccTweaked.cc.pretty.Doc.concat helpText
+function module.makeHelpText(path)
 	local program = registry[path]
 	assert(program, "Program under path: " .. path .. " is not registered to then have it's help menu displayed.")
 	local helpText = petty.text(program.name, colors.yellow) .. ", " .. program.description
 	helpText = appendArgHelpText(program.spec, program.name, helpText)
+	return helpText
+end
+
+---@param path string
+function module.help(path)
+	local helpText = module.makeHelpText(path)
 	local w, h = term.getSize()
 	local doc, textHeight = petty.wrap(helpText, w)
 	if textHeight >= h then
