@@ -1,11 +1,11 @@
-local vec = bundl "feather.vec2d" ---@type lib.feather.vec2d
+local vec = bundl "feather.vec2d" ---@type feather.vec2d
 
 ---@class feather.tty: term
 local module = {}
 setmetatable(module, { __index = term })
 
 ---@class feather.tty.style
----@field pos? lib.feather.vec2d
+---@field pos? feather.vec2d
 ---@field color ccTweaked.colors.color
 ---@field bgColor ccTweaked.colors.color
 ---@field blink boolean
@@ -15,17 +15,17 @@ setmetatable(module, { __index = term })
 ---@type feather.tty.style[]
 module.stack = {}
 
----@return lib.feather.vec2d
+---@return feather.vec2d
 function module.getSize()
 	return vec.new(term.getSize())
 end
 
----@return lib.feather.vec2d
+---@return feather.vec2d
 function module.getCursorPos()
 	return vec.new(term.getCursorPos())
 end
 
----@param pos lib.feather.vec2d
+---@param pos feather.vec2d
 function module.setCursorPos(pos)
 	term.setCursorPos(pos.x, pos.y)
 end

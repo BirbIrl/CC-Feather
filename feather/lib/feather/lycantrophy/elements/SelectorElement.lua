@@ -1,25 +1,25 @@
-local Element = bundl "feather.lycantrophy.elements.Element" ---@type lib.feather.lycantrophy.Element
----@class lib.feather.lycantrophy.SelectorElement: lib.feather.lycantrophy.Element
+local Element = bundl "feather.lycantrophy.elements.Element" ---@type feather.lycantrophy.Element
+---@class feather.lycantrophy.SelectorElement: feather.lycantrophy.Element
 ---@field thickness integer
 ---@field highlightColor? ccTweaked.colors.color
----@field child? lib.feather.lycantrophy.Element
+---@field child? feather.lycantrophy.Element
 ---@field focused boolean
----@field super lib.feather.lycantrophy.Element
+---@field super feather.lycantrophy.Element
 local SelectorElement = Element:extend()
 
 ---@param hightlightColor? ccTweaked.colors.color
----@param child? lib.feather.lycantrophy.Element
----@param config? lib.feather.lycantrophy.config
+---@param child? feather.lycantrophy.Element
+---@param config? feather.lycantrophy.config
 function SelectorElement:new(hightlightColor, child, config)
 	local selectorElement = SelectorElement.super.new(self, config)
-	---@cast selectorElement lib.feather.lycantrophy.SelectorElement
+	---@cast selectorElement feather.lycantrophy.SelectorElement
 	selectorElement.highlightColor = hightlightColor
 	selectorElement.child = child
 	selectorElement.focused = false
-	return setmetatable(selectorElement, SelectorElement) --[[@as lib.feather.lycantrophy.SelectorElement]]
+	return setmetatable(selectorElement, SelectorElement) --[[@as feather.lycantrophy.SelectorElement]]
 end
 
----@param pos lib.feather.vec2d
+---@param pos feather.vec2d
 function SelectorElement:draw(pos)
 	local color = (self.focused and self.highlightColor) or nil
 	self.super.draw(self, pos, color)
@@ -45,6 +45,8 @@ end
 
 ---@param packedEvent [ccTweaked.os.event, ...]
 function SelectorElement:onEvent(packedEvent)
+	--- TO BE IMPLEMENTED
+	return packedEvent
 end
 
 return SelectorElement

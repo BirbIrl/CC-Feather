@@ -348,13 +348,13 @@ function module.complete(spec, current, args)
 
 		if not flag and nextBranches then
 			for _, specCandidate in ipairs(nextBranches) do
-				local parsedCompletions, isValid = specCandidate.argument(arg, specCandidate)
+				local candidateCompletions, isValid = specCandidate.argument(arg, specCandidate)
 				endsValid = isValid
-				for _, completion in ipairs(parsedCompletions) do
+				for _, candidateCompletion in ipairs(candidateCompletions) do
 					if specCandidate.next or specCandidate.flags then
-						completion = completion .. " "
+						candidateCompletion = candidateCompletion .. " "
 					end
-					table.insert(completions, tostring(completion))
+					table.insert(completions, tostring(candidateCompletion))
 				end
 				if isValid then
 					currBranch = specCandidate

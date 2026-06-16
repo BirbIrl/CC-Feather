@@ -1,10 +1,10 @@
----@class lib.feather.lycantrophy
+---@class feather.lycantrophy
 local module = {}
 
-module.defaultConfig = bundl("feather.lycantrophy.defaultConfig") ---@type lib.feather.lycantrophy.config
+module.defaultConfig = bundl("feather.lycantrophy.defaultConfig") ---@type feather.lycantrophy.config
 
----@param template? lib.feather.lycantrophy.config
----@return lib.feather.lycantrophy.config
+---@param template? feather.lycantrophy.config
+---@return feather.lycantrophy.config
 function module.newConfig(template)
 	local newConfig = {}
 	for property, defaultValue in pairs(module.defaultConfig) do
@@ -13,17 +13,17 @@ function module.newConfig(template)
 	return newConfig
 end
 
-module.Element = bundl("feather.lycantrophy.elements.Element") ---@type lib.feather.lycantrophy.Element
+module.Element = bundl("feather.lycantrophy.elements.Element") ---@type feather.lycantrophy.Element
 
-module.TextElement = bundl("feather.lycantrophy.elements.TextElement") ---@type lib.feather.lycantrophy.TextElement
+module.TextElement = bundl("feather.lycantrophy.elements.TextElement") ---@type feather.lycantrophy.TextElement
 
-module.FrameElement = bundl("feather.lycantrophy.elements.FrameElement") ---@type lib.feather.lycantrophy.FrameElement
+module.FrameElement = bundl("feather.lycantrophy.elements.FrameElement") ---@type feather.lycantrophy.FrameElement
 
-module.GroupElement = bundl("feather.lycantrophy.elements.GroupElement") ---@type lib.feather.lycantrophy.GroupElement
+module.GroupElement = bundl("feather.lycantrophy.elements.GroupElement") ---@type feather.lycantrophy.GroupElement
 
-module.SelectorElement = bundl("feather.lycantrophy.elements.SelectorElement") ---@type lib.feather.lycantrophy.SelectorElement
+module.SelectorElement = bundl("feather.lycantrophy.elements.SelectorElement") ---@type feather.lycantrophy.SelectorElement
 
-module.RootElement = bundl("feather.lycantrophy.elements.RootElement") ---@type lib.feather.lycantrophy.RootElement
+module.RootElement = bundl("feather.lycantrophy.elements.RootElement") ---@type feather.lycantrophy.RootElement
 
 
 return module

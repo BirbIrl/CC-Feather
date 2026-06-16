@@ -1,3 +1,4 @@
+---@diagnostic disable: lowercase-global
 local pkgname = "featherd"
 local type = "bin"
 local ver = "unstable"

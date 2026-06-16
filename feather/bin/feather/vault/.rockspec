@@ -1,3 +1,4 @@
+---@diagnostic disable: lowercase-global
 local pkgname = "vault"
 local type = "bin"
 local ver = "unstable"

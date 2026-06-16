@@ -1,6 +1,6 @@
 local featherd = bundl "feather.featherd" ---@type feather.featherd
 local expect = require("cc.expect").expect
-local mess = bundl "feather.mess" ---@type lib.feather.mess
+local mess = bundl "feather.mess" ---@type feather.mess
 local c = colors
 
 local function describeArg(argument, desc)
@@ -46,11 +46,11 @@ if mode == "list" then
 		end
 	end
 elseif mode == "listUnits" then
-	for name, _ in pairs(featherd.units) do
+	for unitName, _ in pairs(featherd.units) do
 		term.setTextColor(c.yellow)
-		term.write(name)
+		term.write(unitName)
 		term.setTextColor(c.white)
-		local process = featherd.processesByName[name] and featherd.processesByName[name][1]
+		local process = featherd.processesByName[unitName] and featherd.processesByName[unitName][1]
 		if not process then
 			term.write(": ")
 			term.setTextColor(c.red)
@@ -73,7 +73,7 @@ elseif mode == "listUnits" then
 elseif mode == "addUnit" then
 	---@type string
 	local command = arg[3]
-	---@type featherd.featherd.process.onDeath
+	---@type feather.featherd.process.onDeath
 	local onDeath = arg[4]
 	---@type "true"|"y"|"Y"|"yes"?
 	local useShell = arg[5]

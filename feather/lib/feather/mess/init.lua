@@ -1,6 +1,4 @@
 --TODO: support relative path
----@type feather.featherd
-local featherd = bundl "feather.featherd"
 ---@type feather.petty
 local petty = bundl("feather.petty")
 ---@type feather.vec2d

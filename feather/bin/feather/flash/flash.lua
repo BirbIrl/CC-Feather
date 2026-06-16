@@ -53,12 +53,12 @@ local function install(path)
 		".feather/lib/feather/petty",
 		".feather/lib/feather/mess"
 	}
-	for _, path in ipairs(paths) do
-		local combined = fs.combine(mountPath, path)
+	for _, packagePath in ipairs(paths) do
+		local combined = fs.combine(mountPath, packagePath)
 		if fs.exists(combined) then
 			fs.delete(combined)
 		end
-		fs.copy(path, combined)
+		fs.copy(packagePath, combined)
 	end
 
 	shell.execute("featherOS", "install", fs.combine(mountPath, "startup.lua"))

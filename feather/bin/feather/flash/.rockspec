@@ -1,4 +1,4 @@
----@diagnostic disable
+---@diagnostic disable: lowercase-global
 local pkgname = "flash"
 local type = "bin"
 local ver = "unstable"

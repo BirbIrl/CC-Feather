@@ -1,3 +1,4 @@
+---@diagnostic disable: lowercase-global
 local pkgname = "ccar"
 local type = "bin"
 local ver = "unstable"

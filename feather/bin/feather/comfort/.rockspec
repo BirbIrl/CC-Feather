@@ -1,3 +1,4 @@
+---@diagnostic disable: lowercase-global
 local pkgname = "comfort"
 local type = "bin"
 local ver = "unstable"

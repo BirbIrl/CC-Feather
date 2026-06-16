@@ -1,4 +1,3 @@
-local featherd = bundl "feather.featherd" ---@type feather.featherd
 ---@class feather.cast.instance
 ---@field trackedObjects table<number, table>
 local cast = {}

@@ -44,6 +44,7 @@ function io.flush() end
 ---@throws If the provided path cannot be opened for reading
 ------
 ---[Official Documentation](https://tweaked.cc/module/io.html#v:input)
+---@diagnostic disable-next-line
 function io.input(file) end
 
 ---Open a file in read mode and return an interator that returns a new line every time it is called. Useful for looping over all lines in a file
@@ -83,6 +84,7 @@ function io.open(path, mode) end
 ---@throws If the provided path cannot be opened for writing
 ---------
 ---[Official Documentation](https://tweaked.cc/module/io.html#v:output)
+---@diagnostic disable-next-line
 function io.output(file) end
 
 ---Read from the currently opened file

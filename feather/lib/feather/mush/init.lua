@@ -17,6 +17,7 @@ local currProcess = nil
 
 local lastTpress = os.clock()
 
+---@diagnostic disable-next-line: duplicate-set-field
 function shell.openTab(...)
 	local args = table.pack(...)
 	local prev = term.redirect(term.native())
@@ -30,6 +31,7 @@ function shell.openTab(...)
 end
 
 ---@param id integer
+---@diagnostic disable-next-line: duplicate-set-field
 function shell.switchTab(id)
 	local pid = tabs[id]
 	if not pid then

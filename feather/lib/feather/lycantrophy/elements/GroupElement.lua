@@ -1,40 +1,40 @@
-local Element = bundl "feather.lycantrophy.elements.Element" ---@type lib.feather.lycantrophy.Element
-local vec = bundl("feather.vec2d") ---@type lib.feather.vec2d
+local Element = bundl "feather.lycantrophy.elements.Element" ---@type feather.lycantrophy.Element
+local vec = bundl("feather.vec2d") ---@type feather.vec2d
 
----@alias lib.feather.lycantrophy.axis "x"|"y"
+---@alias feather.lycantrophy.axis "x"|"y"
 
 local flippedAxis = {
 	x = "y",
 	y = "x"
 }
 
----@class lib.feather.lycantrophy.GroupElement: lib.feather.lycantrophy.Element
----@field children lib.feather.lycantrophy.Element[]
----@field axis lib.feather.lycantrophy.axis
----@field super lib.feather.lycantrophy.Element
+---@class feather.lycantrophy.GroupElement: feather.lycantrophy.Element
+---@field children feather.lycantrophy.Element[]
+---@field axis feather.lycantrophy.axis
+---@field super feather.lycantrophy.Element
 ---@field overflow boolean
 ---@field backwards boolean
 ---@field visibleChildren? integer
 local GroupElement = Element:extend()
 
----@param axis? lib.feather.lycantrophy.axis
+---@param axis? feather.lycantrophy.axis
 ---@param overflow? boolean
 ---@param backwards? boolean
----@param config? lib.feather.lycantrophy.config
----@param ... lib.feather.lycantrophy.Element
+---@param config? feather.lycantrophy.config
+---@param ... feather.lycantrophy.Element
 function GroupElement:new(axis, overflow, backwards, config, ...)
 	local groupElement = GroupElement.super.new(self, config)
-	---@cast groupElement lib.feather.lycantrophy.GroupElement
+	---@cast groupElement feather.lycantrophy.GroupElement
 	groupElement.axis = axis or "x"
 	groupElement.children = table.pack(...)
 	groupElement.overflow = overflow or false
 	groupElement.backwards = backwards or false
 	groupElement.visibleChildren = 0
-	return setmetatable(groupElement, GroupElement) --[[@as lib.feather.lycantrophy.GroupElement]]
+	return setmetatable(groupElement, GroupElement) --[[@as feather.lycantrophy.GroupElement]]
 end
 
----@param size? lib.feather.vec2d
----@return lib.feather.vec2d size
+---@param size? feather.vec2d
+---@return feather.vec2d size
 function GroupElement:resize(size)
 	if size then
 		self.size = size
@@ -72,7 +72,7 @@ function GroupElement:resize(size)
 	return self.size
 end
 
----@param pos lib.feather.vec2d
+---@param pos feather.vec2d
 ---@param backgroundColor? ccTweaked.colors.color
 function GroupElement:draw(pos, backgroundColor)
 	GroupElement.super.draw(self, pos, backgroundColor)

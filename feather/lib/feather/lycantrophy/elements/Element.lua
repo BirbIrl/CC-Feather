@@ -1,23 +1,23 @@
-local Object = bundl("feather.Object") ---@type lib.feather.Object
-local vec = bundl("feather.vec2d") ---@type lib.feather.vec2d
-local defaultConfig = bundl("feather.lycantrophy.defaultConfig") ---@type lib.feather.lycantrophy.config
----@class lib.feather.lycantrophy.Element: lib.feather.Object
----@field config lib.feather.lycantrophy.config
----@field size? lib.feather.vec2d
----@field super lib.feather.Object
----@field pos? lib.feather.vec2d
+local Object = bundl("feather.Object") ---@type feather.Object
+local vec = bundl("feather.vec2d") ---@type feather.vec2d
+local defaultConfig = bundl("feather.lycantrophy.defaultConfig") ---@type feather.lycantrophy.config
+---@class feather.lycantrophy.Element: feather.Object
+---@field config feather.lycantrophy.config
+---@field size? feather.vec2d
+---@field super feather.Object
+---@field pos? feather.vec2d
 local Element = Object:extend()
 
 
----@param config? lib.feather.lycantrophy.config
+---@param config? feather.lycantrophy.config
 function Element:new(config)
 	local element = Element.super.new(self)
-	---@cast element lib.feather.lycantrophy.Element
+	---@cast element feather.lycantrophy.Element
 	element.config = config or defaultConfig
-	return setmetatable(element, Element) --[[@as lib.feather.lycantrophy.Element]]
+	return setmetatable(element, Element) --[[@as feather.lycantrophy.Element]]
 end
 
----@param pos lib.feather.vec2d
+---@param pos feather.vec2d
 ---@param backgroundColor? ccTweaked.colors.color
 function Element:draw(pos, backgroundColor)
 	backgroundColor = backgroundColor or self.config.backgroundColor
@@ -35,8 +35,8 @@ function Element:redraw()
 	self:draw(self.pos)
 end
 
----@param size? lib.feather.vec2d
----@return lib.feather.vec2d size
+---@param size? feather.vec2d
+---@return feather.vec2d size
 function Element:resize(size)
 	self.size = (size or vec.zero):max(self.config.minSize):min(self.config.maxSize)
 	return self.size

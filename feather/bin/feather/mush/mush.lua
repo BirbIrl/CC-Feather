@@ -1,5 +1,3 @@
-local mush = bundl "feather.mush" ---@type feather.mush
-
 local function describeArg(argument, desc)
 	term.setTextColor(colors.gray)
 	write(arg[0] .. " ")

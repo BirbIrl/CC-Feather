@@ -1,36 +1,36 @@
-local vec = bundl("feather.vec2d") ---@type lib.feather.vec2d
+local vec = bundl("feather.vec2d") ---@type feather.vec2d
 
----@alias lib.feather.lycantrophy.RootElement.selectorMap table<lib.feather.lycantrophy.SelectorElement, lib.feather.vec2d>
+---@alias feather.lycantrophy.RootElement.selectorMap table<feather.lycantrophy.SelectorElement, feather.vec2d>
 
-local Element = bundl "feather.lycantrophy.elements.Element" ---@type lib.feather.lycantrophy.Element
-local SelectorElement = bundl "feather.lycantrophy.elements.SelectorElement" ---@type lib.feather.lycantrophy.SelectorElement
----@class lib.feather.lycantrophy.RootElement: lib.feather.lycantrophy.Element
----@field child? lib.feather.lycantrophy.Element
----@field super lib.feather.lycantrophy.Element
----@field selectors lib.feather.lycantrophy.RootElement.selectorMap
----@field focusedElement? lib.feather.lycantrophy.SelectorElement
+local Element = bundl "feather.lycantrophy.elements.Element" ---@type feather.lycantrophy.Element
+local SelectorElement = bundl "feather.lycantrophy.elements.SelectorElement" ---@type feather.lycantrophy.SelectorElement
+---@class feather.lycantrophy.RootElement: feather.lycantrophy.Element
+---@field child? feather.lycantrophy.Element
+---@field super feather.lycantrophy.Element
+---@field selectors feather.lycantrophy.RootElement.selectorMap
+---@field focusedElement? feather.lycantrophy.SelectorElement
 local RootElement = Element:extend()
 
 
----@param child? lib.feather.lycantrophy.Element
----@param config? lib.feather.lycantrophy.config
+---@param child? feather.lycantrophy.Element
+---@param config? feather.lycantrophy.config
 function RootElement:new(child, config)
 	local rootElement = RootElement.super.new(self, config)
-	---@cast rootElement lib.feather.lycantrophy.RootElement
+	---@cast rootElement feather.lycantrophy.RootElement
 	rootElement.child = child
-	return setmetatable(rootElement, RootElement) --[[@as lib.feather.lycantrophy.RootElement]]
+	return setmetatable(rootElement, RootElement) --[[@as feather.lycantrophy.RootElement]]
 end
 
----@param node lib.feather.lycantrophy.Element
----@param record? lib.feather.lycantrophy.RootElement.selectorMap
----@return lib.feather.lycantrophy.RootElement.selectorMap
+---@param node feather.lycantrophy.Element
+---@param record? feather.lycantrophy.RootElement.selectorMap
+---@return feather.lycantrophy.RootElement.selectorMap
 local function map(node, record)
 	record = record or {}
 	if node:instanceOf(SelectorElement) and node.pos then
 		assert(not record[node], "element already inside the record, you're probably displayng the same selector twice")
 		record[node] = node.pos
 	end
-	---@cast node lib.feather.lycantrophy.FrameElement|lib.feather.lycantrophy.GroupElement
+	---@cast node feather.lycantrophy.FrameElement|feather.lycantrophy.GroupElement
 	if node.child then
 		map(node.child, record)
 	elseif node.children then
@@ -55,7 +55,7 @@ function RootElement:mapSelectors()
 	self.selectors = map(self)
 end
 
----@param node lib.feather.lycantrophy.SelectorElement
+---@param node feather.lycantrophy.SelectorElement
 function RootElement:focus(node)
 	assert(node:instanceOf(SelectorElement))
 	if self.focusedElement == node then
@@ -69,7 +69,7 @@ function RootElement:focus(node)
 	node:redraw()
 end
 
----@param pos lib.feather.vec2d
+---@param pos feather.vec2d
 function RootElement:draw(pos)
 	self.super.draw(self, pos)
 	if self.child then
@@ -87,7 +87,7 @@ function RootElement:process()
 end
 
 ---@private
----@param pos lib.feather.vec2d
+---@param pos feather.vec2d
 function RootElement:findSelectorUnderPixel(pos)
 	assert(self.selectors, "Selectors must be mapped first")
 	for node, nodePos in pairs(self.selectors) do
@@ -97,7 +97,7 @@ function RootElement:findSelectorUnderPixel(pos)
 	end
 end
 
----@param axis lib.feather.lycantrophy.axis
+---@param axis feather.lycantrophy.axis
 ---@param backwards boolean
 function RootElement:moveSelection(axis, backwards)
 	local curr = self.focusedElement

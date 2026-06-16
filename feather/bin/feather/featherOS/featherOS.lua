@@ -100,7 +100,8 @@ elseif argument == "startup" then
 	_G.os.version = feather.getVersion
 	_G.feather = feather
 	_G.bundl = bundl
-	_G.dbg = require("cc.pretty").pretty_print
+	_G.dbg = require("cc.pretty").pretty_print -- only use for debugging
+	_G.log = featherd.log                   -- only use for debugging
 	feather.updatePath()
 	featherd.init()
 elseif argument == nil then

@@ -1,4 +1,4 @@
----@class lib.feather.Object
+---@class feather.Object
 local Class = {}
 
 ---@private
@@ -20,7 +20,7 @@ function Class:isInstance()
 end
 
 --- checks if this is an instance of a specific class
----@param class lib.feather.Object class to check if this an instance of
+---@param class feather.Object class to check if this an instance of
 ---@param strict? true doesn't check the inheritance chain
 ---@return boolean
 function Class:instanceOf(class, strict)
@@ -36,8 +36,8 @@ end
 ---makes a new child object based on parent. can only be called by the class acquired with `getClass`
 ---```
 -----Example usage:
-------@class childObject: lib.feather.Object
-------@field super lib.feather.Object
+------@class childObject: feather.Object
+------@field super feather.Object
 ---local Child = Class:extend()
 ---
 ---function Child:new()

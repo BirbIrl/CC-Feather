@@ -1,3 +1,4 @@
+---@diagnostic disable: lowercase-global
 local pkgname = "argh"
 local type = "lib"
 local ver = "unstable"

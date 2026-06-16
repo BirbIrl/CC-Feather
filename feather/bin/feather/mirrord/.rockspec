@@ -1,4 +1,4 @@
----@diagnostic disable
+---@diagnostic disable: lowercase-global
 local pkgname = "mirrord"
 local type = "bin"
 local ver = "unstable"

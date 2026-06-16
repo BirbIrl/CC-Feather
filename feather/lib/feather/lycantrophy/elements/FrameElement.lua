@@ -1,27 +1,27 @@
-local vec = bundl("feather.vec2d") ---@type lib.feather.vec2d
-local Element = bundl "feather.lycantrophy.elements.Element" ---@type lib.feather.lycantrophy.Element
----@class lib.feather.lycantrophy.FrameElement: lib.feather.lycantrophy.Element
+local vec = bundl("feather.vec2d") ---@type feather.vec2d
+local Element = bundl "feather.lycantrophy.elements.Element" ---@type feather.lycantrophy.Element
+---@class feather.lycantrophy.FrameElement: feather.lycantrophy.Element
 ---@field thickness integer
 ---@field color? ccTweaked.colors.color
----@field child? lib.feather.lycantrophy.Element
----@field super lib.feather.lycantrophy.Element
+---@field child? feather.lycantrophy.Element
+---@field super feather.lycantrophy.Element
 local FrameElement = Element:extend()
 
 ---@param thickness integer
 ---@param color? ccTweaked.colors.color
----@param child? lib.feather.lycantrophy.Element
----@param config? lib.feather.lycantrophy.config
+---@param child? feather.lycantrophy.Element
+---@param config? feather.lycantrophy.config
 function FrameElement:new(thickness, color, child, config)
 	assert(thickness > 0, "thickness must be greater than 0")
 	local frameElement = FrameElement.super.new(self, config)
-	---@cast frameElement lib.feather.lycantrophy.FrameElement
+	---@cast frameElement feather.lycantrophy.FrameElement
 	frameElement.thickness = thickness
 	frameElement.color = color
 	frameElement.child = child
-	return setmetatable(frameElement, FrameElement) --[[@as lib.feather.lycantrophy.FrameElement]]
+	return setmetatable(frameElement, FrameElement) --[[@as feather.lycantrophy.FrameElement]]
 end
 
----@param size lib.feather.vec2d
+---@param size feather.vec2d
 function FrameElement:resize(size)
 	if not self.child then
 		self.size = (vec.one * self.thickness * 2):max(self.config.minSize):min(self.config.maxSize)
@@ -37,7 +37,7 @@ function FrameElement:resize(size)
 	return self.size
 end
 
----@param pos lib.feather.vec2d
+---@param pos feather.vec2d
 ---@param backgroundColor? ccTweaked.colors.color
 function FrameElement:draw(pos, backgroundColor)
 	FrameElement.super.draw(self, pos, backgroundColor)

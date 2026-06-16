@@ -1,3 +1,4 @@
+---@diagnostic disable: lowercase-global
 local pkgname = "vec2d"
 local type = "lib"
 local ver = "unstable"
