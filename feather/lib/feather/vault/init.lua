@@ -3,11 +3,12 @@ local module = {}
 
 
 ---@return ccTweaked.peripheral.Inventory
+---@return string outputName
 function module.getOutput()
-	return assert(peripheral.wrap(
-		assert(settings.get("feather.vault.output")
-		, "output name isn't set! use vault setOutput")
-	), "couldn't wrap the named peripheral. is it attached?") --[[@as ccTweaked.peripheral.Inventory]]
+	local name = assert(settings.get("feather.vault.output"), "output name isn't set! use vault setOutput")
+	return
+		assert(peripheral.wrap(name), "couldn't wrap the named peripheral. is it attached?") --[[@as ccTweaked.peripheral.Inventory]],
+		name
 end
 
 local dirs = { bottom = true, top = true, left = true, right = true, front = true, back = true }
@@ -26,7 +27,7 @@ function module.getStorages()
 	return candidates
 end
 
----@alias feather.vault.itemRoutes {peripheral: ccTweaked.peripheral.Inventory, slot: integer, item: ccTweaked.peripheral.itemDetail }[]|{total: integer, getDetails: fun():ccTweaked.peripheral.itemDetail}
+---@alias feather.vault.itemRoutes {peripheral: ccTweaked.peripheral.Inventory, slot: integer, item: ccTweaked.peripheral.item }[]|{total: integer, getDetails: fun():ccTweaked.peripheral.itemDetail}
 
 ---@return table<string,feather.vault.itemRoutes>
 function module.list()

@@ -3,8 +3,10 @@ local argh = bundl "feather.argh" ---@type feather.argh
 local vault = bundl "feather.vault" ---@type feather.vault
 local petty = bundl "feather.petty" ---@type feather.petty
 
+
+---TODO add a flag to ignore search by modname, causes issues. maybe just remove the thingy from minecraft: tag?
 local programPath = fs.combine(feather.installPath, "bin/feather/vault/vault.lua")
-local args = argh.parse(programPath, "vault", "am item manager",
+local args = argh.parse(programPath, "vault", "an item manager",
 	{
 		sufficient = true,
 		next = {
@@ -20,7 +22,7 @@ local args = argh.parse(programPath, "vault", "am item manager",
 							short = "e",
 							description =
 							"When used after get, it will get the exact number of items instead of number of stacks"
-						}
+						},
 					},
 					next = {
 						name = "count",
@@ -52,7 +54,12 @@ local args = argh.parse(programPath, "vault", "am item manager",
 			{
 				name = "dump",
 				argument = argh.argument.name,
-				description = "every 10 seconds dumps items into storage",
+				flags = {
+					watch = {
+						short = "w",
+						description = "will dump items periodically unless an item is requested"
+					}
+				}
 			},
 			{
 				name = "help",
@@ -97,6 +104,7 @@ if args[2].name == "list" then
 	end
 end
 
+---TODO make this function part of vault lib
 if args[2].name == "get" then
 	local ranking = luzz.rank(itemNames, filter)
 	assert(ranking[1], "Didn't find any matching items")
@@ -118,6 +126,41 @@ if args[2].name == "get" then
 		end
 	end
 	petty.print("Got " .. petty.text(tostring(target - amount), colors.yellow) .. " " .. details.displayName)
+end
+
+
+if args[2].name == "dump" then
+	local output, outputName = vault.getOutput()
+	local storages = vault.getStorages()
+	for slot, item in pairs(output.list()) do
+		local left = item.count
+		local routes = items[item.name]
+		if routes then
+			local details = routes.getDetails()
+			if details.maxCount > 1 then
+				for _, route in ipairs(routes) do
+					if route.item.count < details.maxCount then
+						left = left - route.peripheral.pullItems(outputName, slot)
+						if left == 0 then
+							break
+						end
+					end
+				end
+			end
+		end
+		if left > 0 then
+			local lambdas = {}
+			for _, storage in ipairs(storages) do
+				lambdas[#lambdas + 1] = function()
+					if left > 0 then
+						left = left - storage.pullItems(outputName, slot)
+					end
+				end
+			end
+			parallel.waitForAll(table.unpack(lambdas))
+		end
+	end
+	print("Successfuly dumped")
 end
 
 --[[

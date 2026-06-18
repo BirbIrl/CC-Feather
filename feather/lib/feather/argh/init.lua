@@ -149,8 +149,11 @@ module.argument = {
 
 ---TODO: should probably make a way to identify if a function is loose or not instead of just chudding it out with adding text to the name.. or maybe i should use text objects.. i just want it colored but also handle it for hints.
 function module.argument.string(str, spec)
+	if str:sub(1, 2) == "--" then -- TODO: THIS IS TERRIBLE DONT DO THIS
+		return {}, false
+	end
 	if #str > 0 then
-		return {}, true
+		return { "" }, true
 	end
 	return { petty.text("[", colors.gray) .. petty.text(spec.name, colors.yellow) .. petty.text("]", colors.gray) }, true
 end
