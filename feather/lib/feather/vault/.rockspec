@@ -1,11 +1,11 @@
 ---@diagnostic disable: lowercase-global
 local pkgname = "vault"
-local type = "bin"
+local type = "lib"
 local ver = "unstable"
-local summary = "Item management system for computercraft"
-local detailed = [[
-]]
-local deps = { "lib.feather.luzz", "lib.feather.argh", "lib.feather.petty", "lib.feather.vault" }
+local summary = "item manager for FeatherOS"
+local detailed =
+[[]]
+local deps = {}
 
 local url = "github.com/birbirl/CC-Feather"
 local manifest = "feather"

@@ -50,6 +50,7 @@ end
 
 ---@param items string[]
 ---@param key string
+---@return feather.luzz.rating[]
 function module.rank(items, key)
 	---@type table<string, feather.luzz.rating>
 	local matches = {}
@@ -75,6 +76,50 @@ function module.rank(items, key)
 		return #a.item < #b.item
 	end)
 	return matches
+end
+
+---@generic T
+---@param t T[]
+---@return fun(): integer, T?
+local function inversePairs(t)
+	local i = #t + 1
+	return function()
+		i = i - 1
+		if t[i] then return i, t[i] end
+	end
+end
+
+---@param ranking feather.luzz.rating[]
+---@return ccTweaked.cc.pretty.Doc[]
+function module.rankingToColoredText(ranking)
+	local petty = require("feather.petty") ---@type feather.petty
+	local docs = {}
+	for _, rating in inversePairs(ranking) do
+		local doc
+		local color
+		local chunk = ""
+		local hitMap = {}
+		for _, charNum in ipairs(rating.hits) do
+			hitMap[charNum] = true
+		end
+		for i = 1, #rating.item, 1 do
+			local charColor = hitMap[i] and colors.green or colors.white
+			local char = rating.item:sub(i, i)
+			if i > 1 and color ~= charColor then
+				local coloredChunk = petty.text(chunk, color)
+				doc = doc and doc .. coloredChunk or coloredChunk
+				chunk = ""
+			end
+			chunk = chunk .. char
+			color = charColor
+			if i == #rating.item then
+				local coloredChunk = petty.text(chunk, color)
+				doc = doc and doc .. coloredChunk or coloredChunk
+			end
+		end
+		docs[#docs + 1] = doc
+	end
+	return docs
 end
 
 return module

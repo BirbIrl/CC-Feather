@@ -5,7 +5,7 @@ local ver = "unstable"
 local summary = "primitive fuzzy search algorithm in lua"
 local detailed =
 [[]]
-local deps = {}
+local deps = { "lib.feather.petty" }
 
 local url = "github.com/birbirl/CC-Feather"
 local manifest = "feather"

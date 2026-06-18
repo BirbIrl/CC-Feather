@@ -1,7 +1,6 @@
 {
   [ "shell.allow_disk_startup" ] = false,
-  [ "feather.bundle.mirrorID" ] = 2,
-  [ "list.show_hidden" ] = true,
+  [ "motd.enable" ] = false,
   [ "feather.featherd.units" ] = {
     comfortd = {
       command = "comfortd",
@@ -12,6 +11,8 @@
       onDeath = "keep",
     },
   },
-  [ "motd.enable" ] = false,
+  [ "feather.vault.output" ] = "minecraft:barrel_1",
+  [ "feather.bundle.mirrorID" ] = 2,
+  [ "list.show_hidden" ] = true,
   [ "bios.use_multishell" ] = false,
 }

@@ -11,9 +11,7 @@ local registeredSuccessfullyMessage = "Args registered successfuly"
 local helpPath = fs.combine(feather.installPath, "share/argh")
 help.setPath(help.path() .. ":" .. helpPath)
 
----todo: register to help menu as well
----todo: flags only work on the first one
----todo: flags shouldn't show up for flags that were already filled
+---todo: add support for settings
 
 --[[
 --library that would let you register arguments like this:

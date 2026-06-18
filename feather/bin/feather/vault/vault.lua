@@ -1,6 +1,103 @@
-local pretty = require "cc.pretty"
 local luzz = bundl "feather.luzz" ---@type feather.luzz
+local argh = bundl "feather.argh" ---@type feather.argh
+local vault = bundl "feather.vault" ---@type feather.vault
+local petty = bundl "feather.petty" ---@type feather.petty
 
+local programPath = fs.combine(feather.installPath, "bin/feather/vault/vault.lua")
+local args = argh.parse(programPath, "vault", "am item manager",
+	{
+		sufficient = true,
+		next = {
+			{
+				name = "get",
+				argument = argh.argument.name,
+				next = {
+					name = "filter",
+					argument = argh.argument.string,
+					sufficient = true,
+					next = {
+						name = "count",
+						argument = argh.argument.number,
+						description = "Gets items that match filter up till count",
+					}
+				}
+			},
+			{
+				name = "list",
+				argument = argh.argument.name,
+				sufficient = true,
+				next = {
+					description = "lists items available, can be filtered",
+					name = "filter",
+					argument = argh.argument.string,
+				}
+			},
+			{
+				name = "setOutput",
+				argument = argh.argument.name,
+				sufficient = true,
+				next = {
+					description = "sets the item output in this pc's config",
+					name = "peripheralname",
+					argument = argh.argument.peripheral,
+				}
+			},
+			{
+				name = "dump",
+				argument = argh.argument.name,
+				description = "every 10 seconds dumps items into storage",
+			},
+			{
+				name = "help",
+				description = "shows this help menu",
+				argument = argh.argument.name,
+			},
+		}
+	}, ...)
+
+
+if not args[2] or args[2] == "help" then
+	argh.help(programPath)
+	return
+end
+
+if args[2].name == "setOutput" then
+	settings.set("feather.vault.output", args[3].argument)
+	settings.save()
+	return
+end
+
+if args[2].name == "list" then
+	local filter = args[3] and args[3].argument
+	dbg("hm...")
+	local items = vault.list()
+	dbg("hm...")
+	local itemNames = {}
+	for key, _ in pairs(items) do
+		itemNames[#itemNames + 1] = key
+	end
+	---@type ccTweaked.cc.pretty.Doc
+	local lines
+	if filter then
+		local ranking = luzz.rank(itemNames, filter)
+		lines = luzz.rankingToColoredText(ranking)
+	else
+		table.sort(itemNames, function(a, b)
+			return items[a].total < items[b].total
+		end)
+		lines = itemNames
+	end
+	for _, itemName in ipairs(lines) do
+		petty.write(itemName .. petty.text(" - ", colors.gray) .. tostring(items[tostring(itemName)].total))
+		print()
+	end
+end
+
+if args[2].name == "get" then
+
+end
+
+--[[
 local items = {
 	["minecraft:mossy_cobblestone"] = {
 		count = 22,
@@ -96,3 +193,4 @@ for name, _ in pairs(items) do
 end
 local rankedNames = luzz.rank(itemNames, ... or "")
 printRanking(rankedNames)
+--]]
