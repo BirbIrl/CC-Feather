@@ -1043,3 +1043,20 @@
 ---@field name string The item name
 ---@field count integer The number of this item present
 ---@field nbt string|nil This item's Named Binary Tag
+
+---@class ccTweaked.peripheral.itemDetail
+---@field name string The item name
+---@field count integer The number of this item present
+---@field nbt string|nil This item's Named Binary Tag
+---@field maxCount integer The max possible size of the item stack
+---@field displayName string The translated display name of the item. This uses the server's language. This will typically be English on multi-player servers, and your current language on single player.
+---@field tags table<string,true> The item's tags
+---@field itemGroups { id: string, displayName: string }[] The groups the items is in in the creative menu
+---@field damage? number The amount of damage this item has taken.
+---@field maxDamage? number The maximum amount of damage this item has taken.
+---@field durability? number If this item is damaged (i.e. the durability bar is visible), the percentage left on the durability bar, between 0 and 1 (inclusive).
+---@field unbreakable? true If the item is unbreakable
+---@field enchantments? {name:string, displayName:string, level:integer}[] The enchantments this item has.
+---@field potionEffects? {name: string, displayName: string, duration?: number, potency?: integer}[] The potion effects this item has
+---@field mapColour? integer The colour of the block, as an RGB hex value.
+---@field mapColor? integer The colour of the block, as an RGB hex value.
