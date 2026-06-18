@@ -359,6 +359,10 @@ function module.complete(spec, current, args)
 
 		if not flag and nextBranches then
 			for _, specCandidate in ipairs(nextBranches) do
+				if not specCandidate.argument then
+					dbg(currBranch)
+					dbg(specCandidate)
+				end
 				local candidateCompletions, isValid = specCandidate.argument(arg, specCandidate)
 				endsValid = isValid
 				for _, candidateCompletion in ipairs(candidateCompletions) do
@@ -435,23 +439,38 @@ end
 ---@param name string|ccTweaked.cc.pretty.Doc -- gets edited further down the chain to match args
 ---@param doc ccTweaked.cc.pretty.Doc.concat
 ---@param lastDescription? string only called from within the loop to remember the description down the chain
----@param notFirst true? only assigned from within the loop to prevent writing text too much
----@return ccTweaked.cc.pretty.Doc.concat, table<string,feather.argh.flag>
-local function appendArgHelpText(branch, name, doc, lastDescription, notFirst)
+---@param cache? table<feather.argh.spec,true>
+---@return ccTweaked.cc.pretty.Doc.concat, table<string,feather.argh.flag>?
+local function appendArgHelpText(branch, name, doc, lastDescription, cache)
+	cache = cache or {}
+	local first = next(cache) == nil
+	cache[branch] = true
+
 	if type(name) == "string" then
 		name = petty.text(name, colors.gray)
 	end
 	local description = branch.description or lastDescription
 	local flags = branch.flags or {}
-	if (branch.sufficient or not branch.next) and description then
-		doc = doc .. petty.line .. name .. " - " .. description
-	end
 	local next = branch.next
-	if next then
-		if not next[1] then ---TODO remove this and just make a spec normalizer on load
-			next = { branch.next }
+	next = next and not next[1] and { next } or next
+	if (branch.sufficient or not branch.next) and description then
+		---@type string|ccTweaked.cc.pretty.Doc.text
+		local dots = ""
+		if next then
+			for _, nextBranch in ipairs(next) do
+				if cache[nextBranch] then
+					dots = petty.text("...", colors.gray)
+				end
+				break
+			end
 		end
+		doc = doc .. petty.line .. name .. dots .. " - " .. description
+	end
+	if next then
 		for _, nextBranch in ipairs(next) do
+			if cache[nextBranch] then
+				goto continue
+			end
 			local newFlags
 			local defaultResults = nextBranch.argument("", nextBranch)
 			---@type ccTweaked.cc.pretty.Doc|string
@@ -464,7 +483,7 @@ local function appendArgHelpText(branch, name, doc, lastDescription, notFirst)
 			end
 			argName = name .. " " .. argName
 			doc, newFlags = appendArgHelpText(nextBranch, argName,
-				doc, description, true)
+				doc, description, cache)
 			if newFlags then
 				for flagName, flag in pairs(newFlags) do
 					if flag.description then
@@ -472,9 +491,10 @@ local function appendArgHelpText(branch, name, doc, lastDescription, notFirst)
 					end
 				end
 			end
+			::continue::
 		end
 	end
-	if not notFirst then
+	if first then
 		local flagsAlphabetically = {}
 		for flagName, _ in pairs(flags) do
 			flagsAlphabetically[#flagsAlphabetically + 1] = flagName
