@@ -10,43 +10,46 @@ function module.getOutput()
 	), "couldn't wrap the named peripheral. is it attached?") --[[@as ccTweaked.peripheral.Inventory]]
 end
 
+local dirs = { bottom = true, top = true, left = true, right = true, front = true, back = true }
+
 ---@return ccTweaked.peripheral.Inventory[]
 function module.getStorages()
 	local candidates = table.pack(peripheral.find("inventory"))
 	local outputName = peripheral.getName(module.getOutput())
 	for i = #candidates, 1, -1 do
 		local candidate = candidates[i]
-		if peripheral.getName(candidate) == outputName then
+		local name = peripheral.getName(candidate)
+		if name == outputName or dirs[name] then
 			table.remove(candidates, i)
-			break
 		end
 	end
 	return candidates
 end
 
----@alias itemRoutes {peripheralName: string, slot: integer, item: ccTweaked.peripheral.item }[]|{total: integer}
+---@alias feather.vault.itemRoutes {peripheral: ccTweaked.peripheral.Inventory, slot: integer, item: ccTweaked.peripheral.itemDetail }[]|{total: integer, getDetails: fun():ccTweaked.peripheral.itemDetail}
 
----@return table<string,itemRoutes>
+---@return table<string,feather.vault.itemRoutes>
 function module.list()
-	---@type table<string,itemRoutes>
+	---@type table<string,feather.vault.itemRoutes>
 	local registry = {}
 	local invLambdas = {}
-	for _, storage in ipairs(module.getStorages()) do
+	for i, storage in ipairs(module.getStorages()) do
 		invLambdas[#invLambdas + 1] = function()
-			local slotLambdas = {}
-			for slot = 1, storage.size(), 1 do
-				slotLambdas[#slotLambdas + 1] = function()
-					local item = storage.getItemDetail(slot)
-					if item then
-						if not registry[item.name] then
-							registry[item.name] = { total = 0 }
-						end
-						table.insert(registry[item.name], item)
-						registry[item.name].total = registry[item.name].total + item.count
+			local slots = storage.list()
+			for slot, item in pairs(slots) do
+				if item then
+					if not registry[item.name] then
+						registry[item.name] = {
+							total = 0,
+							getDetails = function()
+								return assert(storage.getItemDetail(slot), "item got lost")
+							end
+						}
 					end
+					table.insert(registry[item.name], { peripheral = storage, slot = slot, item = item })
+					registry[item.name].total = registry[item.name].total + item.count
 				end
 			end
-			parallel.waitForAll(table.unpack(slotLambdas))
 		end
 	end
 	parallel.waitForAll(table.unpack(invLambdas))

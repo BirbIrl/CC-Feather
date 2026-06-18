@@ -99,6 +99,7 @@ elseif argument == "startup" then
 	_G.feather = feather
 	_G.bundl = bundl
 	_G.dbg = require("cc.pretty").pretty_print -- only use for debugging
+	_G.inspect = (bundl("feather.mess") --[[@as feather.mess]]).focus
 	_G.log = featherd.log                   -- only use for debugging
 	feather.updatePath()
 	featherd.init()

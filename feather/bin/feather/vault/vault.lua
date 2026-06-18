@@ -15,6 +15,13 @@ local args = argh.parse(programPath, "vault", "am item manager",
 					name = "filter",
 					argument = argh.argument.string,
 					sufficient = true,
+					flags = {
+						exact = {
+							short = "e",
+							description =
+							"When used after get, it will get the exact number of items instead of number of stacks"
+						}
+					},
 					next = {
 						name = "count",
 						argument = argh.argument.number,
@@ -66,16 +73,13 @@ if args[2].name == "setOutput" then
 	settings.save()
 	return
 end
-
+local filter = args[3] and args[3].argument
+local items = vault.list()
+local itemNames = {}
+for key, _ in pairs(items) do
+	itemNames[#itemNames + 1] = key
+end
 if args[2].name == "list" then
-	local filter = args[3] and args[3].argument
-	dbg("hm...")
-	local items = vault.list()
-	dbg("hm...")
-	local itemNames = {}
-	for key, _ in pairs(items) do
-		itemNames[#itemNames + 1] = key
-	end
 	---@type ccTweaked.cc.pretty.Doc
 	local lines
 	if filter then
@@ -94,7 +98,26 @@ if args[2].name == "list" then
 end
 
 if args[2].name == "get" then
-
+	local ranking = luzz.rank(itemNames, filter)
+	assert(ranking[1], "Didn't find any matching items")
+	local routes = items[ranking[1].item]
+	local details = routes.getDetails()
+	local stackSize = details.maxCount
+	local amount = args[4] and tonumber(args[4].argument) or 1
+	if not args[3].flags.exact then
+		amount = amount * stackSize
+	end
+	if args[4] and routes.total < amount then
+		amount = routes.total
+	end
+	local target = amount
+	for _, route in ipairs(routes) do
+		amount = amount - route.peripheral.pushItems(settings.get("feather.vault.output"), route.slot, amount)
+		if amount <= 0 then
+			break
+		end
+	end
+	petty.print("Got " .. petty.text(tostring(target - amount), colors.yellow) .. " " .. details.displayName)
 end
 
 --[[
