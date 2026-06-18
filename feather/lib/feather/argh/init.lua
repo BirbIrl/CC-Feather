@@ -169,6 +169,10 @@ function module.argument.name(str, spec)
 	return { spec.name:sub(#str + 1, -1) }, spec.name == str
 end
 
+function module.argument.peripheral(str, spec)
+	return completion.peripheral(shell, str), peripheral.wrap(str) ~= nil
+end
+
 function module.argument.dir(str, _)
 	local absolutePath = fs.combine(shell.dir(), str)
 	return completion.dir(shell, str), #str > 0 and fs.isDir(absolutePath)
@@ -252,7 +256,7 @@ function module.init()
 				for _, fileName in ipairs(fs.list(binDirPath)) do
 					if fileName:sub(-4, -1) == ".lua" then
 						local fullPath = fs.combine(binDirPath, fileName)
-						local chunk = loadfile(fullPath)
+						local chunk = loadfile(fullPath, nil, _ENV)
 						if chunk then
 							local _, message = pcall(chunk, registerArgsArg)
 							if type(message) == "string" and message:find(registeredSuccessfullyMessage) then
@@ -415,8 +419,12 @@ local function chainsToSufficiency(spec)
 	if spec.sufficient and spec.next then
 		return true
 	end
-	if spec.next then
-		for _, nextSpec in ipairs(spec.next) do
+	local next = spec.next
+	if next then
+		if not next[1] then ---TODO remove this and just make a spec normalizer on load
+			next = { spec.next }
+		end
+		for _, nextSpec in ipairs(next) do
 			if chainsToSufficiency(nextSpec) then
 				return true
 			end
@@ -440,8 +448,12 @@ local function appendArgHelpText(branch, name, doc, lastDescription, notFirst)
 	if (branch.sufficient or not branch.next) and description then
 		doc = doc .. petty.line .. name .. " - " .. description
 	end
-	if branch.next then
-		for _, nextBranch in ipairs(branch.next) do
+	local next = branch.next
+	if next then
+		if not next[1] then ---TODO remove this and just make a spec normalizer on load
+			next = { branch.next }
+		end
+		for _, nextBranch in ipairs(next) do
 			local newFlags
 			local defaultResults = nextBranch.argument("", nextBranch)
 			---@type ccTweaked.cc.pretty.Doc|string
@@ -449,7 +461,7 @@ local function appendArgHelpText(branch, name, doc, lastDescription, notFirst)
 			if type(argName) == "string" then
 				argName = petty.text(nextBranch.name, colors.yellow)
 			end
-			if not chainsToSufficiency(branch) then
+			if not chainsToSufficiency(nextBranch) then
 				argName = argName .. petty.text("?", colors.gray)
 			end
 			argName = name .. " " .. argName
@@ -503,7 +515,7 @@ function module.help(path)
 	if textHeight >= h then
 		mess.focus(doc)
 	else
-		petty.pp(helpText, nil, nil, nil)
+		petty.pp(doc, nil, nil, nil)
 		print()
 	end
 end
