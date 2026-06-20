@@ -1,7 +1,17 @@
 local featherd = bundl "feather.featherd" ---@type feather.featherd
-local windex = bundl "feather.windex" ---@type feather.windex
 local tty = bundl "feather.tty" ---@type feather.tty
 local vec = bundl "feather.vec2d" ---@type feather.vec2d
+
+
+
+---@return Window window The window object
+local function createWindowAndKeepCursorPos(parent, x, y, width, height, visible)
+	local curX, curY = term.getCursorPos()
+	local w = window.create(parent, x, y, width, height, visible)
+	term.setCursorPos(curX, curY)
+	return w
+end
+
 
 ---@class feather.mush
 local module = {}
@@ -24,7 +34,7 @@ function shell.openTab(...)
 	local size = tty.getSize()
 	local proc = featherd.addProcess("mush_tab", function()
 		shell.run(table.unpack(args))
-	end, "discard", false, windex.create(term.current(), 1, 2, size.x, size.y - 1, false))
+	end, "discard", false, createWindowAndKeepCursorPos(term.current(), 1, 2, size.x, size.y - 1, false))
 	table.insert(tabs, (currTab or 0) + 1, proc.pid)
 	term.redirect(prev)
 	return proc.pid
@@ -125,7 +135,7 @@ function module.init()
 				end
 			end
 		end
-	end, "keep", true, windex.create(term.current(), 1, 1, select(1, term.getSize()), 1, true), "silent")
+	end, "keep", true, createWindowAndKeepCursorPos(term.current(), 1, 1, select(1, term.getSize()), 1, true), "silent")
 	shell.openTab("shell")
 	shell.switchTab(#tabs)
 end

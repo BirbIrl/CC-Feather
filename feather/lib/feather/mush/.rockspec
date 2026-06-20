@@ -5,7 +5,7 @@ local ver = "unstable"
 local summary = "A multishell for featherOS"
 local detailed =
 [[]]
-local deps = { "bin.feather.featherd", "lib.feather.windex", "lib.feather.tty", "lib.feather.vec2d" }
+local deps = { "bin.feather.featherd", "lib.feather.tty", "lib.feather.vec2d" }
 
 local url = "github.com/birbirl/CC-Feather"
 local manifest = "feather"

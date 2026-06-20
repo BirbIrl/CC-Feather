@@ -43,7 +43,6 @@ local function install(path)
 		".feather/lib/feather/bundle",
 		".feather/lib/feather/featherd",
 		".feather/bin/feather/featherd",
-		".feather/lib/feather/windex",
 		".feather/lib/feather/tty",
 		".feather/lib/feather/vec2d",
 		".feather/lib/feather/mush",
