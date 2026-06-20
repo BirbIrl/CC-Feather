@@ -19,6 +19,35 @@ local function makeKeyArray(map)
 	return array
 end
 
+---@generic T
+---@param arr T[]
+---@return T[]
+local function removeDuplicates(arr)
+	local hash = {}
+	local new = {}
+	for _, v in ipairs(arr) do
+		if (not hash[v]) then
+			new[#new + 1] = v -- you could print here instead of saving to result table if you wanted
+			hash[v] = true
+		end
+	end
+	return new
+end
+
+local function makePkgCompletionChoices(str, val)
+	local choices = makeKeyArray(val)
+	for _, choice in ipairs(choices) do
+		if str == choice then
+			return completion.choice(str, choices), true
+		end
+	end
+	local completions = completion.choice(str, choices)
+	for i, completionCandidate in ipairs(completions) do -- splits the choices by dots for granular typing in packages
+		completions[i] = completionCandidate:match(".-%.") or completionCandidate
+	end
+	return removeDuplicates(completions), false
+end
+
 ---@type feather.argh.spec
 local spec = {
 	sufficient = true,
@@ -36,13 +65,7 @@ local spec = {
 					if not result then
 						return {}, false
 					end
-					local choices = makeKeyArray(val)
-					for _, choice in ipairs(choices) do
-						if str == choice then
-							return completion.choice(str, choices), true
-						end
-					end
-					return completion.choice(str, choices), false
+					return makePkgCompletionChoices(str, val)
 				end
 
 			},
@@ -56,13 +79,7 @@ local spec = {
 				name = "pkgName",
 				sufficient = true,
 				argument = function(str, _)
-					local choices = makeKeyArray(bundle.listInstalled())
-					for _, choice in ipairs(choices) do
-						if str == choice then
-							return completion.choice(str, choices), true
-						end
-					end
-					return completion.choice(str, choices), false
+					return makePkgCompletionChoices(str, bundle.listInstalled())
 				end
 
 			},
