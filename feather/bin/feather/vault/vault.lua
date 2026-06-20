@@ -99,8 +99,7 @@ if args[2].name == "list" then
 		lines = itemNames
 	end
 	for _, itemName in ipairs(lines) do
-		petty.write(itemName .. petty.text(" - ", colors.gray) .. tostring(items[tostring(itemName)].total))
-		print()
+		petty.print(itemName .. petty.text(" - ", colors.gray) .. tostring(items[tostring(itemName)].total))
 	end
 end
 

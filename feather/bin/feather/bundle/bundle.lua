@@ -1,5 +1,6 @@
 local bundle = bundl "feather.bundle" ---@type feather.bundle
-
+local luzz = bundl "feather.luzz" ---@type feather.luzz
+local petty = bundl "feather.petty" ---@type feather.petty
 
 local function describeArg(argument, desc)
 	term.setTextColor(colors.gray)
@@ -41,7 +42,7 @@ local function install(pkgName)
 		end
 	end
 	for dependencyName, _ in pairs(needsUpdate) do
-		if not installedThisSession[dependencyName] then
+		if not installedThisSession[dependencyName] then --TODO: have this compare versions
 			print("Dependency " .. dependencyName .. " needs an update, resolving")
 			install(dependencyName)
 		end
@@ -52,21 +53,21 @@ end
 ---@param packages feather.bundle.packageTable
 ---@param filter string?
 local function filterAndPrintPackages(packages, filter)
-	local sortedPkgNames = {}
+	local pkgNames = {}
 	local longestPkgName = 0
 	for pkgName, _ in pairs(packages) do
-		if filter and not pkgName:find(filter) then
-			goto continue
-		end
-		sortedPkgNames[#sortedPkgNames + 1] =
+		pkgNames[#pkgNames + 1] =
 			pkgName
 		longestPkgName = math.max(longestPkgName, #pkgName)
-		::continue::
 	end
-	table.sort(sortedPkgNames)
-	for _, pkgName in ipairs(sortedPkgNames) do
-		print(pkgName .. (" "):rep(longestPkgName - #pkgName + 2) .. packages[pkgName]
-			.version)
+	if filter then
+		pkgNames = luzz.rankingToColoredText(luzz.rank(pkgNames, filter))
+	else
+		table.sort(pkgNames)
+	end
+	for _, pkgName in ipairs(pkgNames) do
+		local asString = tostring(pkgName)
+		petty.print(pkgName .. (" "):rep(longestPkgName - #asString + 2) .. packages[asString].version)
 	end
 end
 

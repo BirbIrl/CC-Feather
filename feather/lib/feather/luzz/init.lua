@@ -1,6 +1,7 @@
 ---@class feather.luzz
 local module = {}
 
+--TODO pretty sure this messes with "." and other syntax
 
 ---@param item string
 ---@param key string

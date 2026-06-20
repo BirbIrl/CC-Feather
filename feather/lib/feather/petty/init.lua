@@ -192,4 +192,24 @@ function module.pp(obj, fromLine, toLine, clearLines)
 	return lines
 end
 
+local oldWrite = module.write
+local oldPrint = module.print
+---@param doc ccTweaked.cc.pretty.Doc|string
+---@param maxWidth number?
+function module.write(doc, maxWidth)
+	if type(doc) == "string" then
+		doc = module.text(doc)
+	end
+	oldWrite(doc, maxWidth)
+end
+
+---@param doc ccTweaked.cc.pretty.Doc|string
+---@param maxWidth number?
+function module.print(doc, maxWidth)
+	if type(doc) == "string" then
+		doc = module.text(doc)
+	end
+	oldPrint(doc, maxWidth)
+end
+
 return module
