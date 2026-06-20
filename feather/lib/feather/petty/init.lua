@@ -148,6 +148,7 @@ end
 ---@param clearLines? boolean Whether to clear each line before printing individually
 ---@return integer height final height of the output
 function module.pp(obj, fromLine, toLine, clearLines)
+	local _, termY = term.getSize()
 	fromLine = fromLine or 0
 	assert(getmetatable(obj) == docMt or getmetatable(obj) == ogDocMt) -- given object must be a doc
 	---@cast obj ccTweaked.cc.pretty.Doc
@@ -162,7 +163,12 @@ function module.pp(obj, fromLine, toLine, clearLines)
 		---@cast v ccTweaked.cc.pretty.Doc
 		if v.tag == "line" then
 			if lines >= fromLine then
-				term.setCursorPos(x, y + lines - fromLine)
+				local targetHeight = y + lines - fromLine
+				if targetHeight > termY then
+					term.scroll(1)
+					targetHeight = termY
+				end
+				term.setCursorPos(x, targetHeight)
 				if clearLines then
 					term.clearLine()
 				end

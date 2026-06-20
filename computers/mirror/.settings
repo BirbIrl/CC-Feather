@@ -11,7 +11,6 @@
       onDeath = "keep",
     },
   },
-  [ "feather.vault.output" ] = "minecraft:barrel_1",
   [ "feather.bundle.mirrorID" ] = 2,
   [ "list.show_hidden" ] = true,
   [ "bios.use_multishell" ] = false,

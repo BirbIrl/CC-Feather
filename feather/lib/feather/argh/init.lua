@@ -11,7 +11,7 @@ local registeredSuccessfullyMessage = "Args registered successfuly"
 local helpPath = fs.combine(feather.installPath, "share/argh")
 help.setPath(help.path() .. ":" .. helpPath)
 
----todo: add support for settings
+---todo: add support for settings?
 
 --[[
 --library that would let you register arguments like this:
