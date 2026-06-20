@@ -1,28 +1,130 @@
 local bundle = bundl "feather.bundle" ---@type feather.bundle
 local luzz = bundl "feather.luzz" ---@type feather.luzz
 local petty = bundl "feather.petty" ---@type feather.petty
+local argh = bundl "feather.argh" ---@type feather.argh
+local completion = require "cc.completion"
 
-local function describeArg(argument, desc)
-	term.setTextColor(colors.gray)
-	write(arg[0] .. " ")
-	term.setTextColor(colors.yellow)
-	write(argument)
-	term.setTextColor(colors.white)
-	print(" - " .. desc)
+
+---@generic T
+---@param map table<T,any>?
+---@return T[]
+local function makeKeyArray(map)
+	local array = {}
+	if map then
+		for key, _ in pairs(map) do
+			array[#array + 1] = key
+		end
+	end
+	table.sort(array)
+	return array
 end
-local function help()
-	term.setTextColor(colors.yellow)
-	write("Bundle")
-	term.setTextColor(colors.white)
-	print(", a FeatherOS package manager.")
-	describeArg("get [pkg]", "gets a libary package from the mirror")
-	describeArg("remove [pkg]", "removes a local library package")
-	describeArg("install [pkg]", "installs a program from the mirror")
-	describeArg("uninstall [pkg]", "uninstalls a local program")
-	describeArg("list [filter?]", "lists installed packages and libraries")
-	describeArg("repo [filter?]", "lists available packages and libraries")
-	describeArg("update", "updates and reinstalls all your packages")
-end
+
+---@type feather.argh.spec
+local spec = {
+	sufficient = true,
+	next = {
+		{
+			name = "get",
+			argument = argh.argument.name,
+			description = "installs the named package",
+			branch = true,
+			next = {
+				name = "pkgName",
+				sufficient = true,
+				argument = function(str, _)
+					local result, val = pcall(bundle.listAvailable)
+					if not result then
+						return {}, false
+					end
+					local choices = makeKeyArray(val)
+					for _, choice in ipairs(choices) do
+						if str == choice then
+							return completion.choice(str, choices), true
+						end
+					end
+					return completion.choice(str, choices), false
+				end
+
+			},
+		},
+		{
+			name = "remove",
+			argument = argh.argument.name,
+			branch = true,
+			description = "uninstalls the named package",
+			next = {
+				name = "pkgName",
+				sufficient = true,
+				argument = function(str, _)
+					local choices = makeKeyArray(bundle.listInstalled())
+					for _, choice in ipairs(choices) do
+						if str == choice then
+							return completion.choice(str, choices), true
+						end
+					end
+					return completion.choice(str, choices), false
+				end
+
+			},
+		},
+		{
+			name = "list",
+			argument = argh.argument.name,
+			next = {
+				name = "filter",
+				argument = argh.argument.string,
+				description = "lists installed packages ",
+			},
+			sufficient = true,
+		},
+		{
+			name = "repo",
+			sufficient = true,
+			argument = argh.argument.name,
+			next = {
+				name = "filter",
+				argument = argh.argument.string,
+				description = "lists packages available in the mirror",
+			},
+		},
+		{
+			name = "update",
+			description = "updates all packages on the system",
+			sufficient = true,
+			argument = argh.argument.name,
+		},
+		{
+			name = "mirror",
+			argument = argh.argument.name,
+			next = {
+				{
+					name = "set",
+					argument = argh.argument.name,
+					next = {
+						name = "id",
+						description = "sets a new mirror id",
+						sufficient = true,
+						argument = argh.argument.int
+					},
+				},
+				{
+					name = "get",
+					sufficient = true,
+					description = "gets the current mirror id",
+					argument = argh.argument.name,
+				}
+			}
+		},
+		{
+			name = "help",
+			description = "shows this help menu",
+			argument = argh.argument.name,
+		},
+	}
+}
+
+local programPath = fs.combine(feather.installPath, "bin/feather/bundle/bundle.lua")
+local args = argh.parse(programPath, "bundle", "a package manager", spec, ...)
 
 local installedThisSession = {}
 
@@ -71,25 +173,29 @@ local function filterAndPrintPackages(packages, filter)
 	end
 end
 
-local mode, pkgName = ...
-if mode == "get" then
-	install("lib.feather." .. pkgName)
+local mode = args[2] and args[2].name
+if not mode or mode == "help" then
+	argh.help(programPath)
+elseif mode == "get" then
+	install(args[3].argument)
 elseif mode == "remove" then
-	print("Unimplemented")
-elseif mode == "install" then
-	install("bin.feather." .. pkgName)
-elseif mode == "uninstall" then
 	print("Unimplemented")
 elseif mode == "list" then
 	---@type string[]
-	filterAndPrintPackages(bundle.listInstalled(), pkgName)
+	filterAndPrintPackages(bundle.listInstalled(), args[3] and args[3].argument)
 elseif mode == "repo" then
 	---@type string[]
-	filterAndPrintPackages(bundle.listAvailable(), pkgName)
+	filterAndPrintPackages(bundle.listAvailable(), args[3] and args[3].argument)
 elseif mode == "update" then
 	for pkgToUpdate, _ in pairs(bundle.listInstalled()) do
 		install(pkgToUpdate)
 	end
-else
-	help()
+elseif mode == "mirror" then
+	if args[3].name == "get" then
+		petty.print("Current mirror id is: " ..
+			petty.text(tostring(settings.get("feather.bundle.mirrorID")), colors.yellow))
+	else
+		settings.set("feather.bundle.mirrorID", assert(tonumber(args[4].argument)))
+		settings.save()
+	end
 end

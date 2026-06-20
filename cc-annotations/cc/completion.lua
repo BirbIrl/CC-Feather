@@ -10,6 +10,7 @@ completion = {}
 ---@param text string The incomplete string
 ---@param choices string[] The choices to offer completions from
 ---@param trailingSpace? boolean Add a trailing space after the completed item
+---@return string[]
 ---## Example
 ---```
 ---local completion = require "cc.completion"

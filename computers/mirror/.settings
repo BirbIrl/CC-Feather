@@ -1,17 +1,17 @@
 {
-  [ "shell.allow_disk_startup" ] = false,
-  [ "motd.enable" ] = false,
+  [ "bios.use_multishell" ] = false,
+  [ "list.show_hidden" ] = true,
   [ "feather.featherd.units" ] = {
-    comfortd = {
-      command = "comfortd",
-      onDeath = "keep",
-    },
     mirrord = {
       command = "mirrord",
       onDeath = "keep",
     },
+    comfortd = {
+      command = "comfortd",
+      onDeath = "keep",
+    },
   },
   [ "feather.bundle.mirrorID" ] = 2,
-  [ "list.show_hidden" ] = true,
-  [ "bios.use_multishell" ] = false,
+  [ "motd.enable" ] = false,
+  [ "shell.allow_disk_startup" ] = false,
 }

@@ -155,12 +155,17 @@ function module.argument.string(str, spec)
 	if #str > 0 then
 		return { "" }, true
 	end
-	return { petty.text("[", colors.gray) .. petty.text(spec.name, colors.yellow) .. petty.text("]", colors.gray) }, true
+	return { "[" .. spec.name .. "]" }, true
 end
 
 function module.argument.number(str, spec)
 	local name, valid = module.argument.string(str, spec)
 	return name, valid and tonumber(str) ~= nil
+end
+
+function module.argument.int(str, spec)
+	local name, valid = module.argument.string(str, spec)
+	return name, valid and tonumber(str, 10) ~= nil
 end
 
 function module.argument.name(str, spec)
@@ -170,7 +175,7 @@ function module.argument.name(str, spec)
 	return { spec.name:sub(#str + 1, -1) }, spec.name == str
 end
 
-function module.argument.peripheral(str, spec)
+function module.argument.peripheral(str, _)
 	return completion.peripheral(shell, str), peripheral.wrap(str) ~= nil
 end
 
@@ -199,10 +204,23 @@ local registry = {}
 ---@field name? string -- name of the argument, nil if you want it to just be flags
 ---@field description? string -- description of the argument and each following it
 ---@field argument? feather.argh.argumentFunction -- function used for the argument
----@field sufficient? boolean -- whether you can end on this argument
+---@field sufficient? boolean -- whether you can end on this argument. If this is the last arugment, it'll remove the ? from it and all arguments before it.
 ---@field next? feather.argh.spec|feather.argh.spec[] -- the argument(s) that can be used after this one
 ---@field flags? table<string, feather.argh.flag> -- flags that appear after the argument
 
+
+
+--[[
+TODO: this should go through the table and fix a lot of the issues.
+We don't need to care about mutating the table on the way.
+It's probably for the better anyways.
+Among the changes would be like, dealing with the fact that the developer might make `next` just a single spec instead of an array of specs
+--]]
+---@param spec feather.argh.spec
+---@return feather.argh.spec spec
+local function parseSpec(spec)
+	return spec
+end
 
 
 ---@class feather.argh.return
@@ -217,6 +235,7 @@ local registry = {}
 ---@param ...string
 ---@return feather.argh.return[]
 function module.parse(path, name, description, spec, ...)
+	parseSpec(spec)
 	if ... == registerArgsArg then
 		registry[path] = { name = name, description = description, spec = spec }
 		shell.setCompletionFunction(path, module.makeCompletionFunction(spec))
@@ -421,13 +440,13 @@ end
 
 ---@param  spec feather.argh.spec
 local function chainsToSufficiency(spec)
-	if spec.sufficient and spec.next then
+	if spec.sufficient then
 		return true
 	end
 	local next = spec.next
 	if next then
 		if not next[1] then ---TODO remove this and just make a spec normalizer on load
-			next = { spec.next }
+			next = { next }
 		end
 		for _, nextSpec in ipairs(next) do
 			if chainsToSufficiency(nextSpec) then
@@ -475,11 +494,14 @@ local function appendArgHelpText(branch, name, doc, lastDescription, cache)
 				goto continue
 			end
 			local newFlags
-			local defaultResults = nextBranch.argument("", nextBranch)
-			---@type ccTweaked.cc.pretty.Doc|string
-			local argName = (defaultResults and defaultResults[1]) or nextBranch.name or ""
-			if type(argName) == "string" then
-				argName = petty.text(nextBranch.name, colors.yellow)
+			local arg = nextBranch.argument
+			---@type ccTweaked.cc.pretty.Doc
+			local argName
+			if arg ~= module.argument.name then
+				argName = petty.text("[", colors.gray) ..
+					petty.text(nextBranch.name or "arg", colors.yellow) .. petty.text("]", colors.gray)
+			else
+				argName = petty.text(nextBranch.name or "arg", colors.yellow)
 			end
 			if not chainsToSufficiency(nextBranch) then
 				argName = argName .. petty.text("?", colors.gray)
