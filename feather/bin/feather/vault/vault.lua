@@ -27,7 +27,7 @@ local args = argh.parse(programPath, "vault", "an item manager",
 					next = {
 						name = "count",
 						argument = argh.argument.int,
-						description = "Gets items that match filter up till count",
+						description = "Gets items that match filter up till count, or a stack if not specified",
 					}
 				}
 			},
@@ -124,6 +124,7 @@ if args[2].name == "list" then
 		petty.print(itemName .. petty.text(" - ", colors.gray) .. tostring(items[tostring(itemName)].total))
 	end
 	if interactive then
+		term.setCursorBlink(true)
 		term.write(filter)
 		while true do
 			local eventType, eventData = os.pullEvent()
@@ -160,6 +161,8 @@ if args[2].name == "get" then
 	local amount = args[4] and tonumber(args[4].argument) or 1
 	if args[3].flags.stacks then
 		amount = amount * stackSize
+	elseif not args[4] then
+		amount = 64
 	end
 	if args[4] and routes.total < amount then
 		amount = routes.total
