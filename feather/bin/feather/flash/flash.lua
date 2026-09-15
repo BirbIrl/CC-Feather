@@ -50,7 +50,8 @@ local function install(path)
 		".feather/lib/feather/storage",
 		".feather/lib/feather/argh",
 		".feather/lib/feather/petty",
-		".feather/lib/feather/mess"
+		".feather/lib/feather/mess",
+		".feather/lib/feather/luzz"
 	}
 	for _, packagePath in ipairs(paths) do
 		local combined = fs.combine(mountPath, packagePath)

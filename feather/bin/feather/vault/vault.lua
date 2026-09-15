@@ -18,15 +18,15 @@ local args = argh.parse(programPath, "vault", "an item manager",
 					argument = argh.argument.string,
 					sufficient = true,
 					flags = {
-						exact = {
-							short = "e",
+						stacks = {
+							short = "s",
 							description =
-							"When used after get, it will get the exact number of items instead of number of stacks"
+							"When used after get, it will get the number of stacks instead of single items"
 						},
 					},
 					next = {
 						name = "count",
-						argument = argh.argument.number,
+						argument = argh.argument.int,
 						description = "Gets items that match filter up till count",
 					}
 				}
@@ -70,7 +70,19 @@ local args = argh.parse(programPath, "vault", "an item manager",
 	}, ...)
 
 
-if not args[2] or args[2] == "help" then
+---@generic T
+---@param tbl T[]
+---@param tailLength integer
+---@return T[]
+local function getTableTail(tbl, tailLength)
+	local slice = {}
+	for i = 1, tailLength, 1 do
+		slice[#slice + 1] = tbl[#tbl - tailLength + i]
+	end
+	return slice
+end
+
+if (not args[2]) or args[2].name == "help" then
 	argh.help(programPath)
 	return
 end
@@ -87,19 +99,54 @@ for key, _ in pairs(items) do
 	itemNames[#itemNames + 1] = key
 end
 if args[2].name == "list" then
+	local interactive = not filter
+	filter = filter or ""
 	---@type ccTweaked.cc.pretty.Doc
 	local lines
-	if filter then
+	::printresults::
+	if #filter > 0 then
 		local ranking = luzz.rank(itemNames, filter)
 		lines = luzz.rankingToColoredText(ranking)
 	else
 		table.sort(itemNames, function(a, b)
+			if items[a].total == items[b].total then
+				return a < b
+			end
 			return items[a].total < items[b].total
 		end)
 		lines = itemNames
 	end
+	local _, h = term.getSize()
+	lines = getTableTail(lines, h - 1)
+	term.clear()
+	term.setCursorPos(1, h)
 	for _, itemName in ipairs(lines) do
 		petty.print(itemName .. petty.text(" - ", colors.gray) .. tostring(items[tostring(itemName)].total))
+	end
+	if interactive then
+		term.write(filter)
+		while true do
+			local eventType, eventData = os.pullEvent()
+			if eventType == "char" then
+				filter = filter .. eventData
+				goto printresults
+			elseif eventType == "key" then
+				if eventData == keys.backspace then
+					if #filter == 0 then
+						break
+					end
+					filter = filter:sub(1, -2)
+					goto printresults
+				elseif eventData == keys.enter then
+					term.clearLine()
+					term.setCursorPos(1, h)
+					for char in tostring("vault get " .. lines[#lines] .. " "):gmatch(".") do
+						os.queueEvent("char", char)
+					end
+					break
+				end
+			end
+		end
 	end
 end
 
@@ -111,7 +158,7 @@ if args[2].name == "get" then
 	local details = routes.getDetails()
 	local stackSize = details.maxCount
 	local amount = args[4] and tonumber(args[4].argument) or 1
-	if not args[3].flags.exact then
+	if args[3].flags.stacks then
 		amount = amount * stackSize
 	end
 	if args[4] and routes.total < amount then

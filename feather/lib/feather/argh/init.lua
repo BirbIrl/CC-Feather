@@ -149,7 +149,7 @@ module.argument = {
 
 ---TODO: should probably make a way to identify if a function is loose or not instead of just chudding it out with adding text to the name.. or maybe i should use text objects.. i just want it colored but also handle it for hints.
 function module.argument.string(str, spec)
-	if str:sub(1, 2) == "--" then -- TODO: THIS IS TERRIBLE DONT DO THIS
+	if str:sub(1, 1) == "-" then -- TODO: THIS IS TERRIBLE DONT DO THIS
 		return {}, false
 	end
 	if #str > 0 then
@@ -165,7 +165,7 @@ end
 
 function module.argument.int(str, spec)
 	local name, valid = module.argument.string(str, spec)
-	return name, valid and tonumber(str, 10) ~= nil
+	return name, valid and tonumber(str) ~= nil and str % 1 == 0
 end
 
 function module.argument.name(str, spec)
@@ -386,6 +386,7 @@ function module.complete(spec, current, args)
 					dbg(specCandidate)
 				end
 				local candidateCompletions, isValid = specCandidate.argument(arg, specCandidate)
+				featherd.log(candidateCompletions)
 				endsValid = isValid
 				for _, candidateCompletion in ipairs(candidateCompletions) do
 					if specCandidate.next or specCandidate.flags then
@@ -417,6 +418,7 @@ function module.complete(spec, current, args)
 		for _, flagCompletion in ipairs(flagCompletions) do
 			completions[#completions + 1] = flagCompletion
 		end
+
 
 		if done then
 			break
@@ -556,7 +558,7 @@ function module.help(path)
 	local w, h = term.getSize()
 	local doc, textHeight = petty.wrap(helpText, w)
 	if textHeight >= h then
-		mess.focus(doc)
+		mess.focus(helpText)
 	else
 		petty.pp(doc, nil, nil, nil)
 		print()

@@ -1,6 +1,6 @@
 {
   [ "bios.use_multishell" ] = false,
-  [ "list.show_hidden" ] = true,
+  [ "motd.enable" ] = false,
   [ "feather.featherd.units" ] = {
     mirrord = {
       command = "mirrord",
@@ -11,7 +11,8 @@
       onDeath = "keep",
     },
   },
+  [ "feather.vault.output" ] = "minecraft:barrel_1",
   [ "feather.bundle.mirrorID" ] = 2,
-  [ "motd.enable" ] = false,
+  [ "list.show_hidden" ] = true,
   [ "shell.allow_disk_startup" ] = false,
 }
