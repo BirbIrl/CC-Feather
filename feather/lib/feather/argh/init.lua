@@ -386,7 +386,6 @@ function module.complete(spec, current, args)
 					dbg(specCandidate)
 				end
 				local candidateCompletions, isValid = specCandidate.argument(arg, specCandidate)
-				featherd.log(candidateCompletions)
 				endsValid = isValid
 				for _, candidateCompletion in ipairs(candidateCompletions) do
 					if specCandidate.next or specCandidate.flags then
