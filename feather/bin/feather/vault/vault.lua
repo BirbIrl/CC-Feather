@@ -151,30 +151,17 @@ if args[2].name == "list" then
 	end
 end
 
----TODO make this function part of vault lib
 if args[2].name == "get" then
 	local ranking = luzz.rank(itemNames, filter)
 	assert(ranking[1], "Didn't find any matching items")
 	local routes = items[ranking[1].item]
 	local details = routes.getDetails()
-	local stackSize = details.maxCount
-	local amount = args[4] and tonumber(args[4].argument) or 1
-	if args[3].flags.stacks then
-		amount = amount * stackSize
-	elseif not args[4] then
-		amount = 64
+	local amount = tonumber(args[4] and args[4].argument) or details.maxCount
+	if args[3].flags.stacks and args[4] then
+		amount = amount * details.maxCount
 	end
-	if args[4] and routes.total < amount then
-		amount = routes.total
-	end
-	local target = amount
-	for _, route in ipairs(routes) do
-		amount = amount - route.peripheral.pushItems(settings.get("feather.vault.output"), route.slot, amount)
-		if amount <= 0 then
-			break
-		end
-	end
-	petty.print("Got " .. petty.text(tostring(target - amount), colors.yellow) .. " " .. details.displayName)
+	local imported = vault.import(routes, amount)
+	petty.print("Got " .. petty.text(tostring(imported), colors.yellow) .. " " .. details.displayName)
 end
 
 

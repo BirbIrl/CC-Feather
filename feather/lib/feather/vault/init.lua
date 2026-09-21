@@ -1,6 +1,12 @@
 ---@class feather.vault
 local module = {}
 
+module.cache = {
+	byName = {},
+	byDisplayName = {}, -- each one should then be split by nbt
+	byNbt = {},
+	byTags = {},
+}
 
 ---@return ccTweaked.peripheral.Inventory
 ---@return string outputName
@@ -27,14 +33,15 @@ function module.getStorages()
 	return candidates
 end
 
----@alias feather.vault.itemRoutes {peripheral: ccTweaked.peripheral.Inventory, slot: integer, item: ccTweaked.peripheral.item }[]|{total: integer, getDetails: fun():ccTweaked.peripheral.itemDetail}
+---@alias feather.vault.itemRoute {peripheral: ccTweaked.peripheral.Inventory, slot: integer, item: ccTweaked.peripheral.item }
+---@alias feather.vault.itemRoutes feather.vault.itemRoute[]|{total: integer, getDetails: fun():ccTweaked.peripheral.itemDetail}
 
 ---@return table<string,feather.vault.itemRoutes>
 function module.list()
 	---@type table<string,feather.vault.itemRoutes>
 	local registry = {}
 	local invLambdas = {}
-	for i, storage in ipairs(module.getStorages()) do
+	for _, storage in ipairs(module.getStorages()) do
 		invLambdas[#invLambdas + 1] = function()
 			local slots = storage.list()
 			for slot, item in pairs(slots) do
@@ -53,8 +60,24 @@ function module.list()
 			end
 		end
 	end
+	if #invLambdas > 120 then
+		error("This system doesn't support over 120 storage peripherals yet")
+	end
 	parallel.waitForAll(table.unpack(invLambdas))
 	return registry
+end
+
+---@param routes feather.vault.itemRoutes
+---@param target integer
+function module.import(routes, target)
+	local left = target
+	for _, route in ipairs(routes) do
+		left = left - route.peripheral.pushItems(settings.get("feather.vault.output"), route.slot, left)
+		if left <= 0 then
+			break
+		end
+	end
+	return target - left
 end
 
 return module

@@ -115,6 +115,7 @@ function module.init()
 					shiftHeld = true
 				elseif e1 == keys.w and ctrlHeld then
 					featherd.killProcess(featherd.getProcess(tabs[currTab]))
+					term.setCursorPos(1, 1)
 				elseif e1 == keys.tab and ctrlHeld and shiftHeld then
 					shell.switchTab((currTab - 2) % #tabs + 1)
 				elseif e1 == keys.tab and ctrlHeld then
