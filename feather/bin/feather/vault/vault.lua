@@ -93,7 +93,10 @@ if args[2].name == "setOutput" then
 	return
 end
 local filter = args[3] and args[3].argument
-local items = vault.list()
+if not vault.cache then
+	vault:generateCache()
+end
+local items = vault.cache
 local itemNames = {}
 for key, _ in pairs(items) do
 	itemNames[#itemNames + 1] = key
@@ -109,10 +112,11 @@ if args[2].name == "list" then
 		lines = luzz.rankingToColoredText(ranking)
 	else
 		table.sort(itemNames, function(a, b)
-			if items[a].total == items[b].total then
+			-- currently this is slow, i need to reimagine sorting items within Vault
+			if items[a]:getCount() == items[b]:getCount() then
 				return a < b
 			end
-			return items[a].total < items[b].total
+			return items[a]:getCount() < items[b]:getCount()
 		end)
 		lines = itemNames
 	end
@@ -121,7 +125,7 @@ if args[2].name == "list" then
 	term.clear()
 	term.setCursorPos(1, h)
 	for _, itemName in ipairs(lines) do
-		petty.print(itemName .. petty.text(" - ", colors.gray) .. tostring(items[tostring(itemName)].total))
+		petty.print(itemName .. petty.text(" - ", colors.gray) .. tostring(items[tostring(itemName)]:getCount()))
 	end
 	if interactive then
 		term.setCursorBlink(true)
@@ -155,7 +159,7 @@ if args[2].name == "get" then
 	local ranking = luzz.rank(itemNames, filter)
 	assert(ranking[1], "Didn't find any matching items")
 	local routes = items[ranking[1].item]
-	local details = routes.getDetails()
+	local details = routes:getItemDetail()
 	local amount = tonumber(args[4] and args[4].argument) or details.maxCount
 	if args[3].flags.stacks and args[4] then
 		amount = amount * details.maxCount
@@ -172,7 +176,7 @@ if args[2].name == "dump" then
 		local left = item.count
 		local routes = items[item.name]
 		if routes then
-			local details = routes.getDetails()
+			local details = routes:getItemDetail()
 			if details.maxCount > 1 then
 				for _, route in ipairs(routes) do
 					if route.item.count < details.maxCount then

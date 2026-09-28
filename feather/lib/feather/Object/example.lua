@@ -1,12 +1,12 @@
----@class lib.feather.Object
+---@class feather.Object
 local Object = bundl("feather.Object")
 
----@class lib.feather.Object.example.child1: lib.feather.Object
----@field super lib.feather.Object
+---@class feather.Object.example.child1: feather.Object
+---@field super feather.Object
 local Child1 = Object:extend()
 function Child1:new()
 	local child = Child1.super.new(self)
-	---@type lib.feather.Object.example.child1
+	---@type feather.Object.example.child1
 	return setmetatable(child, Child1)
 end
 
@@ -14,13 +14,12 @@ function Child1:sob()
 	return true
 end
 
----@class lib.feather.Object.example.child2: lib.feather.Object
----
----@field super lib.feather.Object
+---@class feather.Object.example.child2: feather.Object
+---@field super feather.Object
 local Child2 = Object:extend()
 function Child2:new()
 	local child = Child2.super.new(self)
-	---@type lib.feather.Object.example.child2
+	---@type feather.Object.example.child2
 	return setmetatable(child, Child2)
 end
 

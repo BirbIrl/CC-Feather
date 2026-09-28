@@ -1,12 +1,9 @@
+local Item = bundl "feather.vault.Item" ---@type feather.vault.Item
+local Router = bundl "feather.vault.Router" ---@type feather.vault.Router
+local Route = bundl "feather.vault.Route" ---@type feather.vault.Route
+
 ---@class feather.vault
 local module = {}
-
-module.cache = {
-	byName = {},
-	byDisplayName = {}, -- each one should then be split by nbt
-	byNbt = {},
-	byTags = {},
-}
 
 ---@return ccTweaked.peripheral.Inventory
 ---@return string outputName
@@ -33,46 +30,53 @@ function module.getStorages()
 	return candidates
 end
 
----@alias feather.vault.itemRoute {peripheral: ccTweaked.peripheral.Inventory, slot: integer, item: ccTweaked.peripheral.item }
----@alias feather.vault.itemRoutes feather.vault.itemRoute[]|{total: integer, getDetails: fun():ccTweaked.peripheral.itemDetail}
+module.locked = false
 
----@return table<string,feather.vault.itemRoutes>
-function module.list()
-	---@type table<string,feather.vault.itemRoutes>
-	local registry = {}
+---@type table<string,feather.vault.Item>
+module.cache = nil
+
+---@type table<string,string[]>
+module.tags = nil
+
+function module.generateCache()
+	module.locked = true
+	---@type table<string,feather.vault.Item>
+	local cache = {}
+	---@type table<string,string[]>
+	local tags = {}
 	local invLambdas = {}
 	for _, storage in ipairs(module.getStorages()) do
 		invLambdas[#invLambdas + 1] = function()
 			local slots = storage.list()
 			for slot, item in pairs(slots) do
 				if item then
-					if not registry[item.name] then
-						registry[item.name] = {
-							total = 0,
-							getDetails = function()
-								return assert(storage.getItemDetail(slot), "item got lost")
-							end
-						}
+					local route = Route:new(storage, slot, item)
+					if not cache[item.name] then
+						cache[item.name] = Item:new(route)
+					else
+						cache[item.name]:addRoute(route)
 					end
-					table.insert(registry[item.name], { peripheral = storage, slot = slot, item = item })
-					registry[item.name].total = registry[item.name].total + item.count
 				end
 			end
 		end
 	end
-	if #invLambdas > 120 then
-		error("This system doesn't support over 120 storage peripherals yet")
+	if #invLambdas > 100 then
+		error("This system doesn't support over 100 storage peripherals yet")
 	end
 	parallel.waitForAll(table.unpack(invLambdas))
-	return registry
+	module.cache = cache
+	module.tags = tags
+	module.locked = false
+	os.queueEvent("feather.vault.unlocked")
 end
 
----@param routes feather.vault.itemRoutes
 ---@param target integer
 function module.import(routes, target)
+	error("Currently broken")
 	local left = target
 	for _, route in ipairs(routes) do
-		left = left - route.peripheral.pushItems(settings.get("feather.vault.output"), route.slot, left)
+		local _, outputName = module.getOutput()
+		left = left - route.peripheral.pushItems(outputName, route.slot, left)
 		if left <= 0 then
 			break
 		end
