@@ -165,37 +165,12 @@ end
 
 
 if args[2].name == "dump" then
-	local output, outputName = vault.getOutput()
-	local storages = vault.getStorages()
+	local output = vault.getOutput()
 	for slot, item in pairs(output.list()) do
-		local left = item.count
-		local routes = items[item.name]
-		if routes then
-			local details = routes:getItemDetail()
-			if details.maxCount > 1 then
-				for _, route in ipairs(routes) do
-					if route.item.count < details.maxCount then
-						left = left - route.peripheral.pullItems(outputName, slot)
-						if left == 0 then
-							break
-						end
-					end
-				end
-			end
-		end
-		if left > 0 then
-			local lambdas = {}
-			for _, storage in ipairs(storages) do
-				lambdas[#lambdas + 1] = function()
-					if left > 0 then
-						left = left - storage.pullItems(outputName, slot)
-					end
-				end
-			end
-			parallel.waitForAll(table.unpack(lambdas))
-		end
+		local imported = vault.import(output, slot)
+		assert(imported > 0, "Couldn't fit the item into the vault. It probably ran out of space!")
+		petty.print("Imported " .. petty.text(tostring(imported), colors.yellow) .. " " .. item.name)
 	end
-	print("Successfuly dumped")
 end
 
 --[[

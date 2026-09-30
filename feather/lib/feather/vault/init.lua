@@ -5,6 +5,8 @@ local Route = bundl "feather.vault.Route" ---@type feather.vault.Route
 ---@class feather.vault
 local module = {}
 
+
+---TODO: get rid of this. we don't need to specify an output within vault
 ---@return ccTweaked.peripheral.Inventory
 ---@return string outputName
 function module.getOutput()
@@ -27,7 +29,21 @@ function module.getStorages()
 			table.remove(candidates, i)
 		end
 	end
+	if #candidates > 100 then
+		-- this is due to the 128 event stack limit, we use lambdas for scanning each inventory at once
+		error("Vault doesn't support over 100 storage peripherals yet")
+	end
 	return candidates
+end
+
+---@return ccTweaked.peripheral.Inventory?, integer?
+function module.getEmptySlot()
+	for _, storage in ipairs(module.getStorages()) do
+		local lastSlot = #storage.list()
+		if lastSlot < storage.size() then
+			return storage, lastSlot + 1
+		end
+	end
 end
 
 module.locked = false
@@ -59,9 +75,6 @@ function module.generateCache()
 			end
 		end
 	end
-	if #invLambdas > 100 then
-		error("This system doesn't support over 100 storage peripherals yet")
-	end
 	parallel.waitForAll(table.unpack(invLambdas))
 	module.cache = cache
 	module.tags = tags
@@ -83,18 +96,23 @@ end
 ---takes an item from an outside inventory and puts it in the vault cache
 ---@param source ccTweaked.peripheral.Inventory
 ---@param slot integer
----@param amount? integer default is stack
+---@param amount? integer default is all
 function module.import(source, slot, amount)
 	local itemDetail = source.getItemDetail(slot)
 	if not itemDetail then return 0 end
-	amount = amount or itemDetail.maxCount
+	amount = amount or itemDetail.count
 	local item = module.cache[itemDetail.name] or Item:new()
 	module.cache[itemDetail.name] = item
 	local imported = item:fit(source, slot, itemDetail, amount)
 	if imported == amount then
 		return imported
 	end
-	error("fuuuuuuuuuuuuuuck")
+	local destination, emptySlot = module.getEmptySlot()
+	if destination and emptySlot then
+		imported = imported + source.pushItems(peripheral.getName(destination), slot, nil, emptySlot)
+		item:addRoute(Route:new(destination, emptySlot, destination.list()[slot]))
+	end
+	return imported
 end
 
 ---@param itemName string
