@@ -166,10 +166,19 @@ end
 
 if args[2].name == "dump" then
 	local output = vault.getOutput()
+	local candidates = {}
+	local totals = {}
 	for slot, item in pairs(output.list()) do
-		local imported = vault.import(output, slot)
-		assert(imported > 0, "Couldn't fit the item into the vault. It probably ran out of space!")
-		petty.print("Stored " .. petty.text(tostring(imported), colors.yellow) .. " " .. item.name)
+		candidates[#candidates + 1] = function()
+			local imported = vault.import(output, slot)
+			assert(imported > 0, "Couldn't fit the item into the vault. It probably ran out of space!")
+			totals[item.name] = totals[item.name] or 0
+			totals[item.name] = totals[item.name] + imported
+		end
+	end
+	parallel.waitForAll(table.unpack(candidates))
+	for name, imported in pairs(totals) do
+		petty.print("Stored " .. petty.text(tostring(imported), colors.yellow) .. " " .. name)
 	end
 end
 
