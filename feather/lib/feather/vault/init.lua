@@ -52,10 +52,9 @@ function module.generateCache()
 				if item then
 					local route = Route:new(storage, slot, item)
 					if not cache[item.name] then
-						cache[item.name] = Item:new(route)
-					else
-						cache[item.name]:addRoute(route)
+						cache[item.name] = Item:new()
 					end
+					cache[item.name]:addRoute(route)
 				end
 			end
 		end
@@ -70,18 +69,38 @@ function module.generateCache()
 	os.queueEvent("feather.vault.unlocked")
 end
 
----@param target integer
-function module.import(routes, target)
-	error("Currently broken")
-	local left = target
-	for _, route in ipairs(routes) do
-		local _, outputName = module.getOutput()
-		left = left - route.peripheral.pushItems(outputName, route.slot, left)
-		if left <= 0 then
-			break
-		end
+---takes out an item from the vault cache and puts it in an outside inventory
+---@param target ccTweaked.peripheral.Inventory
+---@param itemName string
+---@param amount? integer default is stack
+---@param filter? feather.vault.filter
+---@return integer amount of items exported
+function module.export(target, itemName, amount, filter)
+	local item = assert(module.cache[itemName], "couldn't find any items called \"" .. itemName .. "\"")
+	return item:export(target, amount, filter)
+end
+
+---takes an item from an outside inventory and puts it in the vault cache
+---@param source ccTweaked.peripheral.Inventory
+---@param slot integer
+---@param amount? integer default is stack
+function module.import(source, slot, amount)
+	local itemDetail = source.getItemDetail(slot)
+	if not itemDetail then return 0 end
+	amount = amount or itemDetail.maxCount
+	local item = module.cache[itemDetail.name] or Item:new()
+	module.cache[itemDetail.name] = item
+	local imported = item:fit(source, slot, itemDetail, amount)
+	if imported == amount then
+		return imported
 	end
-	return target - left
+	error("fuuuuuuuuuuuuuuck")
+end
+
+---@param itemName string
+---@return feather.vault.Item?
+function module.getItem(itemName)
+	return module.cache[itemName]
 end
 
 return module

@@ -24,4 +24,47 @@ function Router:addRoute(route)
 	self.itemDetail.count = self.itemDetail.count + route.item.count
 end
 
+function Router:deleteEmptyRoutes()
+	local newRoutes = {}
+	for _, route in ipairs(self.routes) do
+		if route.item.count > 0 then
+			newRoutes[#newRoutes + 1] = route
+		end
+	end
+	self.routes = newRoutes
+end
+
+---@param target ccTweaked.peripheral.Inventory
+---@param amount? integer default is a stack
+function Router:export(target, amount)
+	amount = amount or self.itemDetail.maxCount
+	local exported = 0
+	for _, route in ipairs(self.routes) do
+		exported = exported + route:export(target, amount - exported)
+		if amount == exported then
+			break
+		end
+	end
+	self.itemDetail.count = self.itemDetail.count - exported
+	self:deleteEmptyRoutes()
+	return exported
+end
+
+---Attempts to fit a given item into the router's stacks
+---@param source ccTweaked.peripheral.Inventory
+---@param slot integer
+---@param itemDetail ccTweaked.peripheral.itemDetail this sucks but it's better than querying it 5 times
+---@param amount integer
+function Router:fit(source, slot, itemDetail, amount)
+	local imported = 0
+	for _, route in ipairs(self.routes) do
+		imported = imported + route:fit(source, slot, itemDetail, amount - imported)
+		if imported == amount then
+			break
+		end
+	end
+	self.itemDetail.count = self.itemDetail.count + imported
+	return imported
+end
+
 return Router

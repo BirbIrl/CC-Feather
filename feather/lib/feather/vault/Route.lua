@@ -26,4 +26,23 @@ function Route:getItemDetail()
 		"Item cannot find itself when attempting to get it's own details")
 end
 
+---@param target ccTweaked.peripheral.Inventory
+---@param amount integer
+function Route:export(target, amount)
+	local exported = self.peripheral.pushItems(peripheral.getName(target), self.slot, amount)
+	assert(exported == math.min(amount, self.item.count),
+		"Couldn't push all the items from this route into target inventory, maybe it's full?")
+	self.item.count = self.item.count - exported
+	return exported
+end
+
+function Route:fit(source, slot, itemDetail, amount)
+	if self.item.count == itemDetail.maxCount then
+		return 0
+	end
+	local imported = self.peripheral.pullItems(peripheral.getName(source), slot, amount, self.slot)
+	self.item.count = self.item.count + imported
+	return imported
+end
+
 return Route

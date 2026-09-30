@@ -157,15 +157,10 @@ end
 
 if args[2].name == "get" then
 	local ranking = luzz.rank(itemNames, filter)
-	assert(ranking[1], "Didn't find any matching items")
-	local routes = items[ranking[1].item]
-	local details = routes:getItemDetail()
-	local amount = tonumber(args[4] and args[4].argument) or details.maxCount
-	if args[3].flags.stacks and args[4] then
-		amount = amount * details.maxCount
-	end
-	local imported = vault.import(routes, amount)
-	petty.print("Got " .. petty.text(tostring(imported), colors.yellow) .. " " .. details.displayName)
+	local itemName = assert(ranking[1].item, "Didn't find any matching items")
+	local amount = tonumber(args[4] and args[4].argument)
+	local imported = vault.export(vault.getOutput(), itemName, amount)
+	petty.print("Got " .. petty.text(tostring(imported), colors.yellow) .. " " .. itemName)
 end
 
 
