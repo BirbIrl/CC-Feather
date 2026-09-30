@@ -169,7 +169,7 @@ if args[2].name == "dump" then
 	for slot, item in pairs(output.list()) do
 		local imported = vault.import(output, slot)
 		assert(imported > 0, "Couldn't fit the item into the vault. It probably ran out of space!")
-		petty.print("Imported " .. petty.text(tostring(imported), colors.yellow) .. " " .. item.name)
+		petty.print("Stored " .. petty.text(tostring(imported), colors.yellow) .. " " .. item.name)
 	end
 end
 

@@ -36,20 +36,13 @@ function module.getStorages()
 	return candidates
 end
 
----@return ccTweaked.peripheral.Inventory?, integer?
-function module.getEmptySlot()
-	for _, storage in ipairs(module.getStorages()) do
-		local lastSlot = #storage.list()
-		if lastSlot < storage.size() then
-			return storage, lastSlot + 1
-		end
-	end
-end
-
 module.locked = false
 
 ---@type table<string,feather.vault.Item>
 module.cache = nil
+
+---@type [ccTweaked.peripheral.Inventory, integer]
+module.emptySlots = {}
 
 ---@type table<string,string[]>
 module.tags = nil
@@ -63,14 +56,17 @@ function module.generateCache()
 	local invLambdas = {}
 	for _, storage in ipairs(module.getStorages()) do
 		invLambdas[#invLambdas + 1] = function()
-			local slots = storage.list()
-			for slot, item in pairs(slots) do
+			local list = storage.list()
+			for slot = 1, storage.size(), 1 do
+				local item = list[slot]
 				if item then
 					local route = Route:new(storage, slot, item)
 					if not cache[item.name] then
 						cache[item.name] = Item:new()
 					end
 					cache[item.name]:addRoute(route)
+				else
+					module.emptySlots[#module.emptySlots + 1] = { storage, slot }
 				end
 			end
 		end
@@ -107,10 +103,10 @@ function module.import(source, slot, amount)
 	if imported == amount then
 		return imported
 	end
-	local destination, emptySlot = module.getEmptySlot()
+	local destination, emptySlot = table.unpack(table.remove(module.emptySlots))
 	if destination and emptySlot then
 		imported = imported + source.pushItems(peripheral.getName(destination), slot, nil, emptySlot)
-		item:addRoute(Route:new(destination, emptySlot, destination.list()[slot]))
+		item:addRoute(Route:new(destination, emptySlot, destination.list()[emptySlot]))
 	end
 	return imported
 end

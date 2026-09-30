@@ -26,9 +26,12 @@ end
 
 function Router:deleteEmptyRoutes()
 	local newRoutes = {}
+	local vault = bundl("feather.vault")
 	for _, route in ipairs(self.routes) do
 		if route.item.count > 0 then
 			newRoutes[#newRoutes + 1] = route
+		else
+			vault.emptySlots[#vault.emptySlots + 1] = { route.peripheral, route.slot }
 		end
 	end
 	self.routes = newRoutes
