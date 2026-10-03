@@ -5,7 +5,7 @@ local ver = "unstable"
 local summary = "item manager for FeatherOS"
 local detailed =
 [[]]
-local deps = {}
+local deps = { "lib.feather.Object" }
 
 local url = "github.com/birbirl/CC-Feather"
 local manifest = "feather"

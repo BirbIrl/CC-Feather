@@ -159,6 +159,11 @@ if args[2].name == "get" then
 	local ranking = luzz.rank(itemNames, filter)
 	local itemName = assert(ranking[1].item, "Didn't find any matching items")
 	local amount = tonumber(args[4] and args[4].argument)
+	if args[3].flags.stacks and amount then
+		local maxCount = vault.getItem(itemName):getRouters()[1].itemDetail.maxCount
+		-- this probably isn't accurate for mods that have items under id's with varied stack sizes but that might be a 1.7.10 modded quirk that's not possible anymore i'm not sure
+		amount = amount * maxCount
+	end
 	local imported = vault.export(vault.getOutput(), itemName, amount)
 	petty.print("Got " .. petty.text(tostring(imported), colors.yellow) .. " " .. itemName)
 end
